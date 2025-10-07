@@ -24,6 +24,10 @@ import SavingsGoalsScreen from './src/screens/SavingsGoalsScreen';
 import RecurringTransactionsScreen from './src/screens/RecurringTransactionsScreen';
 import AccountsScreen from './src/screens/AccountsScreen';
 import MoreScreen from './src/screens/MoreScreen';
+import CurrencySelectionScreen from './src/screens/CurrencySelectionScreen';
+import ThemeSelectionScreen from './src/screens/ThemeSelectionScreen';
+import NotificationSettingsScreen from './src/screens/NotificationSettingsScreen';
+import ImportDataScreen from './src/screens/ImportDataScreen';
 
 // Import components
 import CustomTabBar from './src/components/CustomTabBar';
@@ -127,11 +131,27 @@ export default function App() {
             name="RecurringTransactions" 
             component={RecurringTransactionsScreen}
           />
-          <Stack.Screen 
-            name="Accounts" 
-            component={AccountsScreen}
-          />
-        </Stack.Navigator>
+      <Stack.Screen 
+        name="Accounts" 
+        component={AccountsScreen}
+      />
+      <Stack.Screen 
+        name="CurrencySelection" 
+        component={CurrencySelectionScreen}
+      />
+      <Stack.Screen 
+        name="ThemeSelection" 
+        component={ThemeSelectionScreen}
+      />
+      <Stack.Screen 
+        name="NotificationSettings" 
+        component={NotificationSettingsScreen}
+      />
+      <Stack.Screen 
+        name="ImportData" 
+        component={ImportDataScreen}
+      />
+    </Stack.Navigator>
       </NavigationContainer>
     </Provider>
   );

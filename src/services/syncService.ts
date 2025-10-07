@@ -31,11 +31,9 @@ export class SyncService {
       }
 
       this.isInitialized = true;
-      console.log('Data synchronized successfully');
     } catch (error) {
       console.error('Error initializing sync service:', error);
       // Don't throw error, just log it and continue with empty state
-      console.log('Continuing with empty state due to storage error');
     }
   }
 
@@ -132,7 +130,6 @@ export class SyncService {
     try {
       await StorageService.resetStorage();
       this.isInitialized = false;
-      console.log('Storage reset successfully');
     } catch (error) {
       console.error('Error resetting storage:', error);
       throw error;

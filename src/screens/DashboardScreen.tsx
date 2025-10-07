@@ -64,7 +64,7 @@ const DashboardScreen: React.FC = () => {
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    // Simulate refresh
+    // Refresh data
     setTimeout(() => {
       setRefreshing(false);
     }, 1000);

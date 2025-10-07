@@ -5,7 +5,7 @@ export interface User {
   name: string;
   email: string;
   currency: string;
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | 'auto';
   notifications: boolean;
   createdAt: string;
 }
@@ -18,16 +18,8 @@ interface UserState {
 }
 
 const initialState: UserState = {
-  user: {
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    currency: 'USD',
-    theme: 'light',
-    notifications: true,
-    createdAt: new Date().toISOString(),
-  },
-  isAuthenticated: true,
+  user: null,
+  isAuthenticated: false,
   loading: false,
   error: null,
 };

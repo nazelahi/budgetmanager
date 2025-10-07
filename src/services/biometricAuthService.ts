@@ -46,12 +46,10 @@ class BiometricAuthService {
       const capabilities = await this.getCapabilities();
       
       if (!capabilities.hasHardware) {
-        console.log('Biometric authentication not available on this device');
         return false;
       }
 
       if (!capabilities.isEnrolled) {
-        console.log('No biometric data enrolled on this device');
         return false;
       }
 
@@ -68,7 +66,7 @@ class BiometricAuthService {
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
       const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
-      const availableTypes = await LocalAuthentication.availableAuthenticationTypesAsync();
+      const availableTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
 
       return {
         hasHardware,

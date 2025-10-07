@@ -7,6 +7,10 @@ export type RootStackParamList = {
   RecurringTransactions: undefined;
   Accounts: undefined;
   Settings: undefined;
+  CurrencySelection: undefined;
+  ThemeSelection: undefined;
+  NotificationSettings: undefined;
+  ImportData: undefined;
 };
 
 export type TabParamList = {

@@ -100,7 +100,7 @@ const savingsGoalsSlice = createSlice({
           newMilestones.push({
             id: `milestone_${Date.now()}_quarter`,
             goalId: goal.id,
-            type: 'quarter',
+            type: 'quarter' as const,
             achievedAt: new Date().toISOString(),
             amount: goal.currentAmount,
             percentage: 25,
@@ -111,7 +111,7 @@ const savingsGoalsSlice = createSlice({
           newMilestones.push({
             id: `milestone_${Date.now()}_half`,
             goalId: goal.id,
-            type: 'half',
+            type: 'half' as const,
             achievedAt: new Date().toISOString(),
             amount: goal.currentAmount,
             percentage: 50,
@@ -122,7 +122,7 @@ const savingsGoalsSlice = createSlice({
           newMilestones.push({
             id: `milestone_${Date.now()}_three_quarters`,
             goalId: goal.id,
-            type: 'three_quarters',
+            type: 'three_quarters' as const,
             achievedAt: new Date().toISOString(),
             amount: goal.currentAmount,
             percentage: 75,
@@ -133,7 +133,7 @@ const savingsGoalsSlice = createSlice({
           newMilestones.push({
             id: `milestone_${Date.now()}_completed`,
             goalId: goal.id,
-            type: 'completed',
+            type: 'completed' as const,
             achievedAt: new Date().toISOString(),
             amount: goal.currentAmount,
             percentage: 100,

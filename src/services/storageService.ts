@@ -22,7 +22,6 @@ const safeAsyncStorage = {
     } catch (error) {
       // Suppress the warning for known iOS simulator issues
       if (error instanceof Error && error.message.includes('Failed to create storage directory')) {
-        console.log(`Using memory storage for ${key} (iOS simulator storage issue)`);
       } else {
         console.warn(`AsyncStorage setItem failed for ${key}, using memory fallback:`, error);
       }
@@ -36,7 +35,6 @@ const safeAsyncStorage = {
     } catch (error) {
       // Suppress the warning for known iOS simulator issues
       if (error instanceof Error && error.message.includes('Failed to create storage directory')) {
-        console.log(`Using memory storage for ${key} (iOS simulator storage issue)`);
       } else {
         console.warn(`AsyncStorage getItem failed for ${key}, using memory fallback:`, error);
       }
@@ -50,7 +48,6 @@ const safeAsyncStorage = {
     } catch (error) {
       // Suppress the warning for known iOS simulator issues
       if (error instanceof Error && error.message.includes('Failed to create storage directory')) {
-        console.log(`Using memory storage for ${key} (iOS simulator storage issue)`);
       } else {
         console.warn(`AsyncStorage removeItem failed for ${key}, using memory fallback:`, error);
       }
@@ -64,7 +61,6 @@ const safeAsyncStorage = {
     } catch (error) {
       // Suppress the warning for known iOS simulator issues
       if (error instanceof Error && error.message.includes('Failed to create storage directory')) {
-        console.log(`Using memory storage (iOS simulator storage issue)`);
       } else {
         console.warn(`AsyncStorage multiRemove failed, using memory fallback:`, error);
       }
@@ -179,7 +175,6 @@ export class StorageService {
       
       // Try to clear AsyncStorage
       await AsyncStorage.clear();
-      console.log('Storage reset successfully');
     } catch (error) {
       console.warn('Error resetting AsyncStorage, but continuing with memory storage:', error);
     }

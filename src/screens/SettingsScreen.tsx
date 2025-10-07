@@ -167,10 +167,7 @@ const SettingsScreen: React.FC = () => {
       <Card style={styles.section}>
         <TouchableOpacity
           style={styles.settingItem}
-          onPress={() => {
-            // Handle currency selection
-            Alert.alert('Currency', 'Currency selection coming soon');
-          }}
+          onPress={() => navigation.navigate('CurrencySelection' as never)}
         >
           <View style={styles.settingLeft}>
             <Ionicons name="cash-outline" size={24} color={colors.primary} />
@@ -189,9 +186,7 @@ const SettingsScreen: React.FC = () => {
       <Card style={styles.section}>
         <TouchableOpacity
           style={styles.settingItem}
-          onPress={() => {
-            Alert.alert('Theme', 'Theme selection coming soon');
-          }}
+          onPress={() => navigation.navigate('ThemeSelection' as never)}
         >
           <View style={styles.settingLeft}>
             <Ionicons name="color-palette-outline" size={24} color={colors.primary} />
@@ -208,9 +203,7 @@ const SettingsScreen: React.FC = () => {
       <Card style={styles.section}>
         <TouchableOpacity
           style={styles.settingItem}
-          onPress={() => {
-            Alert.alert('Notifications', 'Notification settings coming soon');
-          }}
+          onPress={() => navigation.navigate('NotificationSettings' as never)}
         >
           <View style={styles.settingLeft}>
             <Ionicons name="notifications-outline" size={24} color={colors.primary} />
@@ -247,9 +240,7 @@ const SettingsScreen: React.FC = () => {
 
         <TouchableOpacity
           style={styles.settingItem}
-          onPress={() => {
-            Alert.alert('Import Data', 'Import functionality coming soon');
-          }}
+          onPress={() => navigation.navigate('ImportData' as never)}
         >
           <View style={styles.settingLeft}>
             <Ionicons name="cloud-upload-outline" size={24} color={colors.info} />

@@ -81,12 +81,18 @@ const MoreScreen: React.FC = () => {
       title: 'Export Data',
       icon: 'download-outline',
       color: colors.info,
-      onPress: () => {
-        Alert.alert(
-          'Export Data',
-          'Data export feature will be available soon!',
-          [{ text: 'OK' }]
-        );
+      onPress: async () => {
+        try {
+          const DataImportExportService = (await import('../services/dataImportExportService')).default;
+          const result = await DataImportExportService.exportAllData();
+          if (result) {
+            Alert.alert('Success', 'Data exported successfully!');
+          } else {
+            Alert.alert('Error', 'Failed to export data. Please try again.');
+          }
+        } catch (error) {
+          Alert.alert('Error', 'Failed to export data. Please try again.');
+        }
       },
     },
   ];
