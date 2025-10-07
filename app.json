@@ -25,6 +25,27 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#ffffff",
+          "defaultChannel": "default"
+        }
+      ],
+      "expo-local-authentication",
+      "expo-file-system",
+      "expo-document-picker",
+      "expo-camera",
+      "expo-barcode-scanner"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c1d6a4f9-1222-43ba-aa21-708a40ded002"
+      }
+    },
+    "owner": "taqreem"
   }
 }
