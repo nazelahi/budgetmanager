@@ -357,6 +357,18 @@ class NotificationService {
     const { status } = await Notifications.getPermissionsAsync();
     return status === 'granted';
   }
+
+  // Static method for requesting permissions
+  static async requestPermissionsAsync(): Promise<boolean> {
+    const instance = NotificationService.getInstance();
+    return await instance.initialize();
+  }
+
+  // Static method for scheduling budget alerts
+  static async scheduleBudgetAlert(alert: BudgetAlert): Promise<void> {
+    const instance = NotificationService.getInstance();
+    return await instance.sendBudgetAlert(alert);
+  }
 }
 
 export default NotificationService;

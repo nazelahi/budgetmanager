@@ -42,18 +42,19 @@ class DataImportExportService {
   }
 
   // Export all data to JSON
-  async exportAllData(): Promise<string | null> {
+  static async exportAllData(): Promise<string | null> {
+    const instance = DataImportExportService.getInstance();
     try {
       const data: ExportData = {
-        transactions: await this.getStoredData('transactions'),
-        budgets: await this.getStoredData('budgets'),
-        categories: await this.getStoredData('categories'),
-        savingsGoals: await this.getStoredData('savingsGoals'),
-        recurringTransactions: await this.getStoredData('recurringTransactions'),
-        accounts: await this.getStoredData('accounts'),
-        user: await this.getStoredData('user'),
+        transactions: await instance.getStoredData('transactions'),
+        budgets: await instance.getStoredData('budgets'),
+        categories: await instance.getStoredData('categories'),
+        savingsGoals: await instance.getStoredData('savingsGoals'),
+        recurringTransactions: await instance.getStoredData('recurringTransactions'),
+        accounts: await instance.getStoredData('accounts'),
+        user: await instance.getStoredData('user'),
         exportDate: new Date().toISOString(),
-        version: this.EXPORT_VERSION,
+        version: instance.EXPORT_VERSION,
       };
 
       const jsonString = JSON.stringify(data, null, 2);
@@ -250,7 +251,7 @@ class DataImportExportService {
     try {
       // This would integrate with cloud storage services like Firebase, AWS, etc.
       // For now, we'll just export to local file
-      const fileUri = await this.exportAllData();
+      const fileUri = await DataImportExportService.exportAllData();
       return fileUri !== null;
     } catch (error) {
       console.error('Cloud backup error:', error);
@@ -259,7 +260,8 @@ class DataImportExportService {
   }
 
   // Import data from file
-  async importDataFromFile(fileUri: string): Promise<ImportResult> {
+  static async importDataFromFile(fileUri: string): Promise<ImportResult> {
+    const instance = DataImportExportService.getInstance();
     try {
       const fileContent = await FileSystem.readAsStringAsync(fileUri);
       const data = JSON.parse(fileContent);
@@ -275,32 +277,32 @@ class DataImportExportService {
       };
 
       if (data.transactions && Array.isArray(data.transactions)) {
-        // Import transactions logic here
+        await instance.setStoredData('transactions', data.transactions);
         importedCounts.transactions = data.transactions.length;
       }
 
       if (data.budgets && Array.isArray(data.budgets)) {
-        // Import budgets logic here
+        await instance.setStoredData('budgets', data.budgets);
         importedCounts.budgets = data.budgets.length;
       }
 
       if (data.categories && Array.isArray(data.categories)) {
-        // Import categories logic here
+        await instance.setStoredData('categories', data.categories);
         importedCounts.categories = data.categories.length;
       }
 
       if (data.savingsGoals && Array.isArray(data.savingsGoals)) {
-        // Import goals logic here
+        await instance.setStoredData('savingsGoals', data.savingsGoals);
         importedCounts.savingsGoals = data.savingsGoals.length;
       }
 
       if (data.recurringTransactions && Array.isArray(data.recurringTransactions)) {
-        // Import recurring transactions logic here
+        await instance.setStoredData('recurringTransactions', data.recurringTransactions);
         importedCounts.recurringTransactions = data.recurringTransactions.length;
       }
 
       if (data.accounts && Array.isArray(data.accounts)) {
-        // Import accounts logic here
+        await instance.setStoredData('accounts', data.accounts);
         importedCounts.accounts = data.accounts.length;
       }
 
@@ -327,7 +329,7 @@ class DataImportExportService {
   }
 
   // Restore data from cloud (placeholder for future implementation)
-  async restoreFromCloud(): Promise<ImportResult> {
+  static async restoreFromCloud(): Promise<ImportResult> {
     try {
       // This would integrate with cloud storage services
       // For now, return empty result

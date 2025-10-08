@@ -133,12 +133,12 @@ const ImportDataScreen: React.FC = () => {
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled || isImporting}
-      style={[styles.importOption, disabled && styles.disabledOption]}
+      style={[styles.importOption, disabled ? styles.disabledOption : undefined]}
     >
-      <Card style={[styles.importCard, disabled && styles.disabledCard]}>
+      <Card style={[styles.importCard, disabled ? styles.disabledCard : undefined] as any}>
         <View style={styles.importContent}>
           <View style={styles.importLeft}>
-            <View style={[styles.iconContainer, disabled && styles.disabledIcon]}>
+            <View style={[styles.iconContainer, disabled ? styles.disabledIcon : undefined]}>
               <Ionicons 
                 name={icon as any} 
                 size={24} 
@@ -209,7 +209,7 @@ const ImportDataScreen: React.FC = () => {
             <Card style={[
               styles.resultCard,
               importResult.success ? styles.successCard : styles.errorCard
-            ]}>
+            ] as any}>
               <View style={styles.resultContent}>
                 <Ionicons 
                   name={importResult.success ? 'checkmark-circle' : 'alert-circle'} 

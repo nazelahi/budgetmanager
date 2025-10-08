@@ -227,8 +227,8 @@ const RecurringTransactionsScreen: React.FC = () => {
             title="Delete"
             onPress={() => handleDeleteTransaction(item)}
             variant="outline"
-            style={[styles.actionButton, { borderColor: colors.error }]}
-            textColor={colors.error}
+            style={[styles.actionButton, { borderColor: colors.error }] as any}
+            textStyle={{ color: colors.error }}
           />
         </View>
       </Card>

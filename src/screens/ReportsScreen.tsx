@@ -233,7 +233,7 @@ const ReportsScreen: React.FC = () => {
             <View style={styles.overviewContent}>
               {/* Net Income - Primary Focus with Gradient */}
               <LinearGradient
-                colors={netIncome >= 0 ? gradients.success : gradients.error}
+                colors={netIncome >= 0 ? gradients.success as [string, string] : gradients.error as [string, string]}
                 style={styles.netIncomeSection}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}

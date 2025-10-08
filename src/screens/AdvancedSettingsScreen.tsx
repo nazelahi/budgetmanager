@@ -109,8 +109,7 @@ const AdvancedSettingsScreen: React.FC = () => {
   const handleExportData = async () => {
     setIsLoading(true);
     try {
-      const dataService = DataImportExportService.getInstance();
-      await dataService.exportAllData();
+      await DataImportExportService.exportAllData();
     } catch (error) {
       Alert.alert('Export Failed', 'Failed to export data. Please try again.');
     } finally {
@@ -197,7 +196,7 @@ const AdvancedSettingsScreen: React.FC = () => {
     destructive: boolean = false
   ) => (
     <TouchableOpacity onPress={onPress}>
-      <Card style={[styles.settingItem, destructive && styles.destructiveItem]}>
+      <Card style={[styles.settingItem, destructive ? styles.destructiveItem : undefined] as any}>
         <View style={styles.settingContent}>
           <View style={styles.settingLeft}>
             <View style={[styles.settingIcon, { backgroundColor: color + '20' }]}>

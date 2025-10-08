@@ -96,12 +96,15 @@ const NotificationSettingsScreen: React.FC = () => {
       return;
     }
 
-    await NotificationService.scheduleBudgetAlert(
-      'Test Budget',
-      'Test Category',
-      100,
-      50
-    );
+    await NotificationService.scheduleBudgetAlert({
+      budgetId: 'test',
+      budgetName: 'Test Budget',
+      category: 'Test Category',
+      spent: 100,
+      limit: 50,
+      percentage: 200,
+      type: 'exceeded'
+    });
     
     Alert.alert('Test Sent', 'A test notification has been sent!');
   };

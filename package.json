@@ -12,7 +12,7 @@
     "build:ios": "expo build:ios",
     "eject": "expo eject",
     "test": "jest",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx --config eslint.config.js",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -51,7 +51,13 @@
     "react-redux": "^9.2.0"
   },
   "devDependencies": {
+    "@react-native/eslint-config": "^0.82.0",
     "@types/react": "~19.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.0",
+    "@typescript-eslint/parser": "^8.46.0",
+    "eslint": "^9.37.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-native": "^5.0.0",
     "typescript": "~5.9.2"
   },
   "private": true
