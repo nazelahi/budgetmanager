@@ -1,11 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppData, Transaction, Category } from '../types';
+import { AppData, Transaction, Category, FinancialAccount } from '../types';
 
 const STORAGE_KEY = 'budget_manager_data';
 
 const defaultData: AppData = {
   transactions: [],
   categories: [],
+  accounts: [],
+  accountTransactions: [],
   settings: {
     currency: 'USD',
     theme: 'dark',
@@ -124,6 +126,30 @@ class StorageService {
   async updateSettings(settings: Partial<AppData['settings']>): Promise<void> {
     const data = await this.getData();
     data.settings = { ...data.settings, ...settings };
+    await this.saveData(data);
+  }
+
+  // Financial Account management methods
+  async addAccount(account: FinancialAccount): Promise<void> {
+    const data = await this.getData();
+    data.accounts.push(account);
+    await this.saveData(data);
+  }
+
+  async updateAccount(id: string, updates: Partial<FinancialAccount>): Promise<void> {
+    const data = await this.getData();
+    const accountIndex = data.accounts.findIndex(account => account.id === id);
+    if (accountIndex !== -1) {
+      data.accounts[accountIndex] = { ...data.accounts[accountIndex], ...updates };
+      await this.saveData(data);
+    }
+  }
+
+  async deleteAccount(id: string): Promise<void> {
+    const data = await this.getData();
+    data.accounts = data.accounts.filter(account => account.id !== id);
+    // Also remove any account transactions
+    data.accountTransactions = data.accountTransactions.filter(at => at.accountId !== id);
     await this.saveData(data);
   }
 

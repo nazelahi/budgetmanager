@@ -5,6 +5,7 @@ export interface Transaction {
   category: string;
   type: 'income' | 'expense';
   date: string;
+  accountId?: string; // Reference to the financial account
   createdAt: string;
 }
 
@@ -16,11 +17,40 @@ export interface Category {
   icon: string;
 }
 
+export interface FinancialAccount {
+  id: string;
+  name: string;
+  type: 'cash' | 'bank' | 'credit_card' | 'savings' | 'investment' | 'other';
+  balance: number;
+  currency: string;
+  color: string;
+  icon: string;
+  isActive: boolean;
+  description?: string;
+  accountNumber?: string;
+  bankName?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AccountTransaction {
+  id: string;
+  accountId: string;
+  transactionId: string;
+  amount: number;
+  type: 'debit' | 'credit';
+  description: string;
+  date: string;
+  createdAt: string;
+}
+
 
 // Enhanced AppData interface
 export interface AppData {
   transactions: Transaction[];
   categories: Category[];
+  accounts: FinancialAccount[];
+  accountTransactions: AccountTransaction[];
   settings: {
     currency: string;
     theme: 'light' | 'dark';

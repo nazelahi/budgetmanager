@@ -7,14 +7,12 @@ import {
   ScrollView,
   Platform,
   Alert,
-  Image,
   TextInput,
   Modal,
   Pressable,
   Switch,
-  Linking,
+  FlatList,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -34,127 +32,141 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useApp } from '../contexts/AppContext';
 import { colors, spacing, typography, borderRadius, shadows } from '../utils/theme';
-import StorageService from '../services/StorageService';
-import DataExportService from '../services/DataExportService';
+import { FinancialAccount } from '../types';
 
-interface AccountSettings {
-  notifications: boolean;
-  biometricAuth: boolean;
-  autoBackup: boolean;
-  darkMode: boolean;
-  currency: string;
-  language: string;
-  privacyMode: boolean;
-}
+const ACCOUNT_TYPES = [
+  { type: 'cash', label: 'Cash', icon: 'cash-outline', color: '#10B981' },
+  { type: 'bank', label: 'Bank Account', icon: 'card-outline', color: '#3B82F6' },
+  { type: 'credit_card', label: 'Credit Card', icon: 'card', color: '#EF4444' },
+  { type: 'savings', label: 'Savings', icon: 'trending-up-outline', color: '#8B5CF6' },
+  { type: 'investment', label: 'Investment', icon: 'bar-chart-outline', color: '#F59E0B' },
+  { type: 'other', label: 'Other', icon: 'ellipsis-horizontal-outline', color: '#6B7280' },
+];
+
+const ACCOUNT_ICONS = [
+  'cash-outline', 'card-outline', 'card', 'trending-up-outline', 'bar-chart-outline',
+  'wallet-outline', 'bank-outline', 'home-outline', 'business-outline', 'school-outline',
+  'car-outline', 'airplane-outline', 'gift-outline', 'star-outline', 'heart-outline'
+];
+
+const ACCOUNT_COLORS = [
+  '#10B981', '#3B82F6', '#EF4444', '#8B5CF6', '#F59E0B', '#EC4899',
+  '#06B6D4', '#84CC16', '#F97316', '#6366F1', '#14B8A6', '#F43F5E'
+];
 
 const AccountScreen: React.FC = () => {
   const navigation = useNavigation();
-  const { data, profile: contextProfile, refreshProfile, updateProfile } = useApp();
+  const { data, addAccount, updateAccount, deleteAccount } = useApp();
   const insets = useSafeAreaInsets();
   
-  const [profile, setProfile] = useState({
-    id: '1',
-    name: '',
-    email: '',
-    phone: '',
-    avatar: null as string | null,
-    avatarType: 'icon' as 'icon' | 'image',
-    bio: '',
-    location: '',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  });
-  
-  const [settings, setSettings] = useState<AccountSettings>({
-    notifications: true,
-    biometricAuth: false,
-    autoBackup: true,
-    darkMode: true,
-    currency: 'USD',
-    language: 'en',
-    privacyMode: false,
-  });
-  
+  const [accounts, setAccounts] = useState<FinancialAccount[]>([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<FinancialAccount | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [showAvatarModal, setShowAvatarModal] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [isSaving, setIsSaving] = useState(false);
 
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    type: 'cash' as FinancialAccount['type'],
+    balance: '',
+    currency: 'USD',
+    color: ACCOUNT_COLORS[0],
+    icon: ACCOUNT_ICONS[0],
+    description: '',
+    accountNumber: '',
+    bankName: '',
+  });
+
   // Animation values
-  const editButtonScale = useSharedValue(1);
-  const settingsButtonScale = useSharedValue(1);
-  const avatarScale = useSharedValue(1);
+  const addButtonScale = useSharedValue(1);
+  const modalScale = useSharedValue(0);
 
   useEffect(() => {
-    loadProfile();
-    loadSettings();
-  }, []);
+    loadAccounts();
+  }, [data]);
 
-  const loadProfile = async () => {
-    try {
-      if (contextProfile) {
-        setProfile(contextProfile);
-      } else {
-        const savedProfile = await StorageService.getProfile();
-        if (savedProfile) {
-          setProfile({
-            ...savedProfile,
-            avatarType: savedProfile.avatarType || 'icon',
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error loading profile:', error);
+  const loadAccounts = () => {
+    if (data?.accounts) {
+      setAccounts(data.accounts.filter(account => account.isActive));
     }
   };
 
-  const loadSettings = async () => {
-    try {
-      const savedSettings = await StorageService.getSettings();
-      if (savedSettings) {
-        setSettings(prev => ({
-          ...prev,
-          ...savedSettings,
-        }));
-      }
-    } catch (error) {
-      console.error('Error loading settings:', error);
-    }
-  };
-
-  const handleEditPress = () => {
-    editButtonScale.value = withSpring(0.95, {}, () => {
-      editButtonScale.value = withSpring(1);
+  const handleAddPress = () => {
+    addButtonScale.value = withSpring(0.95, {}, () => {
+      addButtonScale.value = withSpring(1);
     });
-    setIsEditing(true);
-  };
-
-  const handleSettingsPress = () => {
-    settingsButtonScale.value = withSpring(0.95, {}, () => {
-      settingsButtonScale.value = withSpring(1);
+    setFormData({
+      name: '',
+      type: 'cash',
+      balance: '',
+      currency: 'USD',
+      color: ACCOUNT_COLORS[0],
+      icon: ACCOUNT_ICONS[0],
+      description: '',
+      accountNumber: '',
+      bankName: '',
     });
-    setShowSettingsModal(true);
+    setValidationErrors({});
+    setShowAddModal(true);
+    modalScale.value = withSpring(1);
   };
 
-  const handleAvatarPress = () => {
-    avatarScale.value = withSpring(0.95, {}, () => {
-      avatarScale.value = withSpring(1);
+  const handleEditPress = (account: FinancialAccount) => {
+    setSelectedAccount(account);
+    setFormData({
+      name: account.name,
+      type: account.type,
+      balance: account.balance.toString(),
+      currency: account.currency,
+      color: account.color,
+      icon: account.icon,
+      description: account.description || '',
+      accountNumber: account.accountNumber || '',
+      bankName: account.bankName || '',
     });
-    setShowAvatarModal(true);
+    setValidationErrors({});
+    setShowEditModal(true);
+    modalScale.value = withSpring(1);
   };
 
-  const validateProfile = () => {
+  const handleCloseModal = () => {
+    modalScale.value = withTiming(0, {}, () => {
+      setShowAddModal(false);
+      setShowEditModal(false);
+      setSelectedAccount(null);
+      setFormData({
+        name: '',
+        type: 'cash',
+        balance: '',
+        currency: 'USD',
+        color: ACCOUNT_COLORS[0],
+        icon: ACCOUNT_ICONS[0],
+        description: '',
+        accountNumber: '',
+        bankName: '',
+      });
+      setValidationErrors({});
+    });
+  };
+
+  const validateForm = () => {
     const errors: {[key: string]: string} = {};
     
-    if (!profile.name.trim()) {
-      errors.name = 'Name is required';
+    if (!formData.name.trim()) {
+      errors.name = 'Account name is required';
     }
     
-    if (!profile.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(profile.email)) {
-      errors.email = 'Please enter a valid email';
+    if (!formData.balance.trim()) {
+      errors.balance = 'Initial balance is required';
+    } else if (isNaN(Number(formData.balance))) {
+      errors.balance = 'Balance must be a valid number';
+    }
+    
+    if (formData.type === 'bank' && !formData.bankName.trim()) {
+      errors.bankName = 'Bank name is required for bank accounts';
     }
     
     setValidationErrors(errors);
@@ -162,254 +174,308 @@ const AccountScreen: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!validateProfile()) {
+    if (!validateForm()) {
       return;
     }
 
     setIsSaving(true);
     try {
-      const updatedProfile = {
-        ...profile,
+      const accountData = {
+        ...formData,
+        balance: Number(formData.balance),
+        isActive: true,
+        createdAt: selectedAccount?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+
+      if (selectedAccount) {
+        await updateAccount(selectedAccount.id, accountData);
+      } else {
+        await addAccount(accountData);
+      }
       
-      await updateProfile(updatedProfile);
-      setIsEditing(false);
-      setValidationErrors({});
-      Alert.alert('Success', 'Profile updated successfully');
+      handleCloseModal();
+      Alert.alert('Success', `Account ${selectedAccount ? 'updated' : 'created'} successfully`);
     } catch (error) {
-      Alert.alert('Error', 'Failed to update profile');
+      Alert.alert('Error', `Failed to ${selectedAccount ? 'update' : 'create'} account`);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleCancel = () => {
-    setIsEditing(false);
-    setValidationErrors({});
-    loadProfile();
-  };
-
-  const handleImagePicker = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setProfile(prev => ({
-          ...prev,
-          avatar: result.assets[0].uri,
-          avatarType: 'image',
-        }));
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pick image');
-    }
-  };
-
-  const handleCameraCapture = async () => {
-    try {
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setProfile(prev => ({
-          ...prev,
-          avatar: result.assets[0].uri,
-          avatarType: 'image',
-        }));
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to capture image');
-    }
-  };
-
-  const handleIconSelect = (iconName: string) => {
-    setProfile(prev => ({
-      ...prev,
-      avatar: iconName,
-      avatarType: 'icon',
-    }));
-    setShowAvatarModal(false);
-  };
-
-  const handleSettingsChange = async (key: keyof AccountSettings, value: any) => {
-    const newSettings = { ...settings, [key]: value };
-    setSettings(newSettings);
-    
-    try {
-      await StorageService.updateSettings(newSettings);
-    } catch (error) {
-      console.error('Error saving settings:', error);
-    }
-  };
-
-  const handleExportData = async () => {
-    try {
-      const exportData = await DataExportService.exportToJSON();
-      Alert.alert(
-        'Export Complete',
-        'Your data has been exported successfully',
-        [{ text: 'OK' }]
-      );
-    } catch (error) {
-      Alert.alert('Error', 'Failed to export data');
-    }
-  };
-
-  const handleDeleteAccount = () => {
+  const handleDelete = (account: FinancialAccount) => {
     Alert.alert(
       'Delete Account',
-      'Are you sure you want to delete your account? This action cannot be undone.',
+      `Are you sure you want to delete "${account.name}"? This action cannot be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            // Implement account deletion
-            Alert.alert('Account Deleted', 'Your account has been deleted');
+          onPress: async () => {
+            try {
+              await deleteAccount(account.id);
+              Alert.alert('Success', 'Account deleted successfully');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete account');
+            }
           },
         },
       ]
     );
   };
 
-  const animatedEditStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: editButtonScale.value }],
+  const getTotalBalance = () => {
+    return accounts.reduce((total, account) => total + account.balance, 0);
+  };
+
+  const getAccountTypeInfo = (type: FinancialAccount['type']) => {
+    return ACCOUNT_TYPES.find(t => t.type === type) || ACCOUNT_TYPES[0];
+  };
+
+  const animatedAddStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: addButtonScale.value }],
   }));
 
-  const animatedSettingsStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: settingsButtonScale.value }],
+  const animatedModalStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: modalScale.value }],
   }));
 
-  const animatedAvatarStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: avatarScale.value }],
-  }));
-
-  const renderAvatarModal = () => (
-    <Modal
-      visible={showAvatarModal}
-      transparent
-      animationType="fade"
-      onRequestClose={() => setShowAvatarModal(false)}
-    >
-      <Pressable
-        style={styles.modalOverlay}
-        onPress={() => setShowAvatarModal(false)}
-      >
-        <Animated.View
-          entering={SlideInUp.delay(200)}
-          style={styles.avatarModal}
-        >
-          <Text style={styles.modalTitle}>Choose Avatar</Text>
-          
-          <View style={styles.avatarOptions}>
+  const renderAccountCard = ({ item: account }: { item: FinancialAccount }) => {
+    const typeInfo = getAccountTypeInfo(account.type);
+    
+    return (
+      <Animated.View entering={FadeInDown.delay(200)} style={styles.accountCard}>
+        <View style={styles.accountHeader}>
+          <View style={[styles.accountIcon, { backgroundColor: account.color }]}>
+            <Ionicons name={account.icon as any} size={24} color={colors.white} />
+          </View>
+          <View style={styles.accountInfo}>
+            <Text style={styles.accountName}>{account.name}</Text>
+            <Text style={styles.accountType}>{typeInfo.label}</Text>
+            {account.bankName && (
+              <Text style={styles.accountBank}>{account.bankName}</Text>
+            )}
+          </View>
+          <View style={styles.accountActions}>
             <TouchableOpacity
-              style={styles.avatarOption}
-              onPress={handleImagePicker}
+              style={styles.actionButton}
+              onPress={() => handleEditPress(account)}
             >
-              <Ionicons name="image-outline" size={24} color={colors.primary} />
-              <Text style={styles.avatarOptionText}>Gallery</Text>
+              <Ionicons name="create-outline" size={20} color={colors.primary} />
             </TouchableOpacity>
-            
             <TouchableOpacity
-              style={styles.avatarOption}
-              onPress={handleCameraCapture}
+              style={styles.actionButton}
+              onPress={() => handleDelete(account)}
             >
-              <Ionicons name="camera-outline" size={24} color={colors.primary} />
-              <Text style={styles.avatarOptionText}>Camera</Text>
+              <Ionicons name="trash-outline" size={20} color={colors.error} />
             </TouchableOpacity>
           </View>
+        </View>
+        
+        <View style={styles.accountBalance}>
+          <Text style={styles.balanceLabel}>Balance</Text>
+          <Text style={[styles.balanceAmount, { color: account.balance >= 0 ? colors.success : colors.error }]}>
+            {account.currency} {account.balance.toLocaleString()}
+          </Text>
+        </View>
+        
+        {account.description && (
+          <Text style={styles.accountDescription}>{account.description}</Text>
+        )}
+      </Animated.View>
+    );
+  };
 
-          <View style={styles.iconGrid}>
-            {['person', 'person-circle', 'happy', 'business', 'school', 'star'].map((icon) => (
-              <TouchableOpacity
-                key={icon}
-                style={[
-                  styles.iconOption,
-                  profile.avatar === icon && styles.selectedIconOption
-                ]}
-                onPress={() => handleIconSelect(icon)}
-              >
-                <Ionicons 
-                  name={icon as any} 
-                  size={24} 
-                  color={profile.avatar === icon ? colors.white : colors.primary} 
+  const renderAddModal = () => (
+    <Modal
+      visible={showAddModal || showEditModal}
+      transparent
+      animationType="fade"
+      onRequestClose={handleCloseModal}
+    >
+      <Pressable style={styles.modalOverlay} onPress={handleCloseModal}>
+        <Animated.View style={[styles.modal, animatedModalStyle]}>
+          <Text style={styles.modalTitle}>
+            {selectedAccount ? 'Edit Account' : 'Add New Account'}
+          </Text>
+          
+          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+            {/* Account Name */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Account Name *</Text>
+              <TextInput
+                style={[styles.input, validationErrors.name && styles.inputError]}
+                value={formData.name}
+                onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
+                placeholder="e.g., My Checking Account"
+                placeholderTextColor={colors.textSecondary}
+              />
+              {validationErrors.name && (
+                <Text style={styles.errorText}>{validationErrors.name}</Text>
+              )}
+            </View>
+
+            {/* Account Type */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Account Type *</Text>
+              <View style={styles.typeGrid}>
+                {ACCOUNT_TYPES.map((type) => (
+                  <TouchableOpacity
+                    key={type.type}
+                    style={[
+                      styles.typeOption,
+                      formData.type === type.type && styles.selectedTypeOption,
+                      { borderColor: type.color }
+                    ]}
+                    onPress={() => setFormData(prev => ({ ...prev, type: type.type as FinancialAccount['type'] }))}
+                  >
+                    <Ionicons 
+                      name={type.icon as any} 
+                      size={20} 
+                      color={formData.type === type.type ? colors.white : type.color} 
+                    />
+                    <Text style={[
+                      styles.typeOptionText,
+                      formData.type === type.type && styles.selectedTypeOptionText
+                    ]}>
+                      {type.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Initial Balance */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Initial Balance *</Text>
+              <TextInput
+                style={[styles.input, validationErrors.balance && styles.inputError]}
+                value={formData.balance}
+                onChangeText={(text) => setFormData(prev => ({ ...prev, balance: text }))}
+                placeholder="0.00"
+                placeholderTextColor={colors.textSecondary}
+                keyboardType="numeric"
+              />
+              {validationErrors.balance && (
+                <Text style={styles.errorText}>{validationErrors.balance}</Text>
+              )}
+            </View>
+
+            {/* Currency */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Currency</Text>
+              <View style={styles.currencyRow}>
+                <TextInput
+                  style={styles.currencyInput}
+                  value={formData.currency}
+                  onChangeText={(text) => setFormData(prev => ({ ...prev, currency: text }))}
+                  placeholder="USD"
+                  placeholderTextColor={colors.textSecondary}
                 />
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Animated.View>
-      </Pressable>
-    </Modal>
-  );
+              </View>
+            </View>
 
-  const renderSettingsModal = () => (
-    <Modal
-      visible={showSettingsModal}
-      transparent
-      animationType="fade"
-      onRequestClose={() => setShowSettingsModal(false)}
-    >
-      <Pressable
-        style={styles.modalOverlay}
-        onPress={() => setShowSettingsModal(false)}
-      >
-        <Animated.View
-          entering={SlideInUp.delay(200)}
-          style={styles.settingsModal}
-        >
-          <Text style={styles.modalTitle}>Account Settings</Text>
-          
-          <ScrollView style={styles.settingsList}>
-            <View style={styles.settingItem}>
-              <Text style={styles.settingLabel}>Push Notifications</Text>
-              <Switch
-                value={settings.notifications}
-                onValueChange={(value) => handleSettingsChange('notifications', value)}
-                trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor={settings.notifications ? colors.white : colors.textSecondary}
+            {/* Bank Name (for bank accounts) */}
+            {formData.type === 'bank' && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Bank Name *</Text>
+                <TextInput
+                  style={[styles.input, validationErrors.bankName && styles.inputError]}
+                  value={formData.bankName}
+                  onChangeText={(text) => setFormData(prev => ({ ...prev, bankName: text }))}
+                  placeholder="e.g., Chase Bank"
+                  placeholderTextColor={colors.textSecondary}
+                />
+                {validationErrors.bankName && (
+                  <Text style={styles.errorText}>{validationErrors.bankName}</Text>
+                )}
+              </View>
+            )}
+
+            {/* Account Number (optional) */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Account Number (Optional)</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.accountNumber}
+                onChangeText={(text) => setFormData(prev => ({ ...prev, accountNumber: text }))}
+                placeholder="Last 4 digits"
+                placeholderTextColor={colors.textSecondary}
+                secureTextEntry
               />
             </View>
 
-            <View style={styles.settingItem}>
-              <Text style={styles.settingLabel}>Biometric Authentication</Text>
-              <Switch
-                value={settings.biometricAuth}
-                onValueChange={(value) => handleSettingsChange('biometricAuth', value)}
-                trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor={settings.biometricAuth ? colors.white : colors.textSecondary}
+            {/* Description */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Description (Optional)</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={formData.description}
+                onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
+                placeholder="Add a description..."
+                placeholderTextColor={colors.textSecondary}
+                multiline
+                numberOfLines={3}
               />
             </View>
 
-            <View style={styles.settingItem}>
-              <Text style={styles.settingLabel}>Auto Backup</Text>
-              <Switch
-                value={settings.autoBackup}
-                onValueChange={(value) => handleSettingsChange('autoBackup', value)}
-                trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor={settings.autoBackup ? colors.white : colors.textSecondary}
-              />
-            </View>
-
-            <View style={styles.settingItem}>
-              <Text style={styles.settingLabel}>Privacy Mode</Text>
-              <Switch
-                value={settings.privacyMode}
-                onValueChange={(value) => handleSettingsChange('privacyMode', value)}
-                trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor={settings.privacyMode ? colors.white : colors.textSecondary}
-              />
+            {/* Color and Icon Selection */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Color & Icon</Text>
+              <View style={styles.colorIconRow}>
+                <View style={styles.colorPicker}>
+                  {ACCOUNT_COLORS.map((color) => (
+                    <TouchableOpacity
+                      key={color}
+                      style={[
+                        styles.colorOption,
+                        { backgroundColor: color },
+                        formData.color === color && styles.selectedColorOption
+                      ]}
+                      onPress={() => setFormData(prev => ({ ...prev, color }))}
+                    />
+                  ))}
+                </View>
+                <View style={styles.iconPicker}>
+                  {ACCOUNT_ICONS.slice(0, 6).map((icon) => (
+                    <TouchableOpacity
+                      key={icon}
+                      style={[
+                        styles.iconOption,
+                        formData.icon === icon && styles.selectedIconOption
+                      ]}
+                      onPress={() => setFormData(prev => ({ ...prev, icon }))}
+                    >
+                      <Ionicons 
+                        name={icon as any} 
+                        size={20} 
+                        color={formData.icon === icon ? colors.white : colors.primary} 
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
             </View>
           </ScrollView>
+
+          <View style={styles.modalActions}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleCloseModal}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.saveButton, isSaving && styles.disabledButton]}
+              onPress={handleSave}
+              disabled={isSaving}
+            >
+              <Text style={styles.saveButtonText}>
+                {isSaving ? 'Saving...' : selectedAccount ? 'Update' : 'Create'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </Animated.View>
       </Pressable>
     </Modal>
@@ -424,137 +490,73 @@ const AccountScreen: React.FC = () => {
         style={[styles.headerGradient, { paddingTop: insets.top + spacing.xs }]}
       >
         <Animated.View entering={SlideInLeft.delay(200)} style={styles.headerTitleContainer}>
-          <Ionicons name="person-circle" size={18} color={colors.white} style={styles.headerIcon} />
-          <Text style={styles.headerTitle}>Account</Text>
+          <Ionicons name="wallet-outline" size={18} color={colors.white} style={styles.headerIcon} />
+          <Text style={styles.headerTitle}>Financial Accounts</Text>
         </Animated.View>
         <View style={styles.headerActions}>
-          <Animated.View entering={SlideInRight.delay(300)} style={styles.headerActionContainer}>
-            <Animated.View style={animatedSettingsStyle}>
-              <TouchableOpacity
-                style={styles.headerButton}
-                onPress={handleSettingsPress}
-              >
-                <Ionicons name="settings-outline" size={18} color={colors.white} />
-              </TouchableOpacity>
-            </Animated.View>
+          <Animated.View entering={SlideInRight.delay(300)} style={animatedAddStyle}>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={handleAddPress}
+            >
+              <Ionicons name="add" size={18} color={colors.white} />
+            </TouchableOpacity>
           </Animated.View>
         </View>
       </LinearGradient>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Profile Section */}
-        <Animated.View entering={FadeInDown.delay(300)} style={styles.profileSection}>
-          <View style={styles.profileCard}>
-            <Animated.View style={animatedAvatarStyle}>
+        {/* Total Balance Card */}
+        <Animated.View entering={FadeInDown.delay(300)} style={styles.totalBalanceCard}>
+          <View style={styles.totalBalanceHeader}>
+            <Ionicons name="trending-up-outline" size={24} color={colors.primary} />
+            <Text style={styles.totalBalanceTitle}>Total Balance</Text>
+          </View>
+          <Text style={styles.totalBalanceAmount}>
+            ${getTotalBalance().toLocaleString()}
+          </Text>
+          <Text style={styles.totalBalanceSubtext}>
+            Across {accounts.length} account{accounts.length !== 1 ? 's' : ''}
+          </Text>
+        </Animated.View>
+
+        {/* Accounts List */}
+        <View style={styles.accountsSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Your Accounts</Text>
+            <Text style={styles.sectionSubtitle}>
+              {accounts.length} account{accounts.length !== 1 ? 's' : ''}
+            </Text>
+          </View>
+
+          {accounts.length > 0 ? (
+            <FlatList
+              data={accounts}
+              renderItem={renderAccountCard}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+              showsVerticalScrollIndicator={false}
+            />
+          ) : (
+            <Animated.View entering={FadeInDown.delay(400)} style={styles.emptyState}>
+              <Ionicons name="wallet-outline" size={48} color={colors.textSecondary} />
+              <Text style={styles.emptyStateText}>No accounts yet</Text>
+              <Text style={styles.emptyStateSubtext}>
+                Add your first financial account to get started
+              </Text>
               <TouchableOpacity
-                style={styles.avatarContainer}
-                onPress={handleAvatarPress}
+                style={styles.emptyStateButton}
+                onPress={handleAddPress}
               >
-                {profile.avatarType === 'image' && profile.avatar ? (
-                  <Image source={{ uri: profile.avatar }} style={styles.avatarImage} />
-                ) : (
-                  <Ionicons 
-                    name={profile.avatar as any || 'person'} 
-                    size={40} 
-                    color={colors.white} 
-                  />
-                )}
-                <View style={styles.avatarEditIcon}>
-                  <Ionicons name="camera" size={16} color={colors.white} />
-                </View>
+                <Ionicons name="add" size={20} color={colors.white} />
+                <Text style={styles.emptyStateButtonText}>Add Account</Text>
               </TouchableOpacity>
             </Animated.View>
-
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{profile.name || 'Your Name'}</Text>
-              <Text style={styles.profileEmail}>{profile.email || 'your.email@example.com'}</Text>
-              <Text style={styles.profileLocation}>{profile.location || 'Location'}</Text>
-            </View>
-
-            <Animated.View style={animatedEditStyle}>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={isEditing ? handleSave : handleEditPress}
-                disabled={isSaving}
-              >
-                <Ionicons 
-                  name={isEditing ? 'checkmark' : 'create-outline'} 
-                  size={16} 
-                  color={colors.white} 
-                />
-                <Text style={styles.editButtonText}>
-                  {isSaving ? 'Saving...' : isEditing ? 'Save' : 'Edit'}
-                </Text>
-              </TouchableOpacity>
-            </Animated.View>
-          </View>
-        </Animated.View>
-
-        {/* Account Statistics */}
-        <Animated.View entering={FadeInDown.delay(400)} style={styles.statsSection}>
-          <View style={styles.statsCard}>
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Ionicons name="receipt" size={24} color={colors.primary} />
-                <Text style={styles.statNumber}>{data?.transactions?.length || 0}</Text>
-                <Text style={styles.statLabel}>Transactions</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Ionicons name="pricetag" size={24} color={colors.primary} />
-                <Text style={styles.statNumber}>{data?.categories?.length || 0}</Text>
-                <Text style={styles.statLabel}>Categories</Text>
-              </View>
-            </View>
-          </View>
-        </Animated.View>
-
-        {/* Account Actions */}
-        <Animated.View entering={FadeInDown.delay(500)} style={styles.actionsSection}>
-          <View style={styles.actionsCard}>
-            <TouchableOpacity style={styles.actionItem} onPress={handleExportData}>
-              <Ionicons name="download-outline" size={24} color={colors.primary} />
-              <Text style={styles.actionText}>Export Data</Text>
-              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionItem}>
-              <Ionicons name="cloud-upload-outline" size={24} color={colors.primary} />
-              <Text style={styles.actionText}>Backup to Cloud</Text>
-              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionItem}>
-              <Ionicons name="shield-checkmark-outline" size={24} color={colors.primary} />
-              <Text style={styles.actionText}>Privacy & Security</Text>
-              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionItem}>
-              <Ionicons name="help-circle-outline" size={24} color={colors.primary} />
-              <Text style={styles.actionText}>Help & Support</Text>
-              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-
-        {/* Danger Zone */}
-        <Animated.View entering={FadeInDown.delay(600)} style={styles.dangerSection}>
-          <View style={styles.dangerCard}>
-            <Text style={styles.dangerTitle}>Danger Zone</Text>
-            <TouchableOpacity 
-              style={styles.dangerItem} 
-              onPress={handleDeleteAccount}
-            >
-              <Ionicons name="trash-outline" size={24} color={colors.error} />
-              <Text style={[styles.actionText, { color: colors.error }]}>Delete Account</Text>
-              <Ionicons name="chevron-forward" size={20} color={colors.error} />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
+          )}
+        </View>
       </ScrollView>
 
-      {renderAvatarModal()}
-      {renderSettingsModal()}
+      {renderAddModal()}
     </View>
   );
 };
@@ -588,224 +590,328 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
-  headerActionContainer: {
-    marginLeft: spacing.sm,
-  },
-  headerButton: {
+  addButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   scrollView: {
     flex: 1,
   },
-  profileSection: {
-    padding: spacing.md,
-  },
-  profileCard: {
+  totalBalanceCard: {
+    margin: spacing.md,
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
     ...shadows.md,
   },
-  avatarContainer: {
-    position: 'relative',
-    marginRight: spacing.md,
-  },
-  avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-  },
-  avatarEditIcon: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
+  totalBalanceHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: spacing.sm,
   },
-  profileInfo: {
-    flex: 1,
-  },
-  profileName: {
+  totalBalanceTitle: {
     ...typography.h4,
     color: colors.textPrimary,
     fontWeight: '600',
+    marginLeft: spacing.sm,
+  },
+  totalBalanceAmount: {
+    ...typography.h2,
+    color: colors.primary,
+    fontWeight: '700',
     marginBottom: spacing.xs,
   },
-  profileEmail: {
-    ...typography.bodySmall,
+  totalBalanceSubtext: {
+    ...typography.caption,
     color: colors.textSecondary,
-    marginBottom: spacing.xs,
   },
-  profileLocation: {
+  accountsSection: {
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.xl,
+  },
+  sectionHeader: {
+    marginBottom: spacing.md,
+  },
+  sectionTitle: {
+    ...typography.h4,
+    color: colors.textPrimary,
+    fontWeight: '600',
+  },
+  sectionSubtitle: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
+  accountCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    ...shadows.sm,
+  },
+  accountHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  accountIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
+  },
+  accountInfo: {
+    flex: 1,
+  },
+  accountName: {
+    ...typography.body,
+    color: colors.textPrimary,
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  accountType: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  accountBank: {
     ...typography.caption,
     color: colors.textTertiary,
+    marginTop: 2,
   },
-  editButton: {
+  accountActions: {
+    flexDirection: 'row',
+  },
+  actionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.backgroundSecondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: spacing.xs,
+  },
+  accountBalance: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  balanceLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  balanceAmount: {
+    ...typography.h4,
+    fontWeight: '700',
+  },
+  accountDescription: {
+    ...typography.caption,
+    color: colors.textTertiary,
+    marginTop: spacing.sm,
+    fontStyle: 'italic',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+  },
+  emptyStateText: {
+    ...typography.h4,
+    color: colors.textPrimary,
+    fontWeight: '600',
+    marginTop: spacing.md,
+  },
+  emptyStateSubtext: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  emptyStateButton: {
     backgroundColor: colors.primary,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
     flexDirection: 'row',
     alignItems: 'center',
   },
-  editButtonText: {
+  emptyStateButtonText: {
     ...typography.button,
     color: colors.white,
     marginLeft: spacing.xs,
   },
-  statsSection: {
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.md,
-  },
-  statsCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    ...shadows.md,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statNumber: {
-    ...typography.h3,
-    color: colors.textPrimary,
-    fontWeight: '700',
-    marginTop: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  statLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
-  actionsSection: {
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.md,
-  },
-  actionsCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    ...shadows.md,
-  },
-  actionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  actionText: {
-    ...typography.body,
-    color: colors.textPrimary,
-    flex: 1,
-    marginLeft: spacing.sm,
-  },
-  dangerSection: {
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.xl,
-  },
-  dangerCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    ...shadows.md,
-  },
-  dangerTitle: {
-    ...typography.h4,
-    color: colors.error,
-    fontWeight: '600',
-    marginBottom: spacing.sm,
-  },
-  dangerItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.sm,
-  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    padding: spacing.md,
   },
-  avatarModal: {
+  modal: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: borderRadius.lg,
-    borderTopRightRadius: borderRadius.lg,
-    padding: spacing.lg,
-    maxHeight: '50%',
-  },
-  settingsModal: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: borderRadius.lg,
-    borderTopRightRadius: borderRadius.lg,
-    padding: spacing.lg,
-    maxHeight: '70%',
+    borderRadius: borderRadius.lg,
+    maxHeight: '90%',
+    ...shadows.xl,
   },
   modalTitle: {
     ...typography.h4,
     color: colors.textPrimary,
     fontWeight: '600',
     textAlign: 'center',
-    marginBottom: spacing.lg,
+    padding: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  avatarOptions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: spacing.lg,
+  modalContent: {
+    maxHeight: 400,
+    padding: spacing.lg,
   },
-  avatarOption: {
-    alignItems: 'center',
-    padding: spacing.md,
+  inputGroup: {
+    marginBottom: spacing.md,
   },
-  avatarOptionText: {
+  inputLabel: {
     ...typography.bodySmall,
     color: colors.textPrimary,
+    fontWeight: '500',
+    marginBottom: spacing.xs,
+  },
+  input: {
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    ...typography.body,
+    color: colors.textPrimary,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  inputError: {
+    borderColor: colors.error,
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
+  errorText: {
+    ...typography.caption,
+    color: colors.error,
     marginTop: spacing.xs,
   },
-  iconGrid: {
+  typeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-around',
+    gap: spacing.sm,
+  },
+  typeOption: {
+    flex: 1,
+    minWidth: '45%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 2,
+    backgroundColor: colors.backgroundSecondary,
+  },
+  selectedTypeOption: {
+    backgroundColor: colors.primary,
+  },
+  typeOptionText: {
+    ...typography.caption,
+    color: colors.textPrimary,
+    marginLeft: spacing.xs,
+    fontWeight: '500',
+  },
+  selectedTypeOptionText: {
+    color: colors.white,
+  },
+  currencyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  currencyInput: {
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    ...typography.body,
+    color: colors.textPrimary,
+    borderWidth: 1,
+    borderColor: colors.border,
+    width: 80,
+  },
+  colorIconRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  colorPicker: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  colorOption: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  selectedColorOption: {
+    borderColor: colors.white,
+  },
+  iconPicker: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
   },
   iconOption: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: colors.backgroundSecondary,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: spacing.xs,
   },
   selectedIconOption: {
     backgroundColor: colors.primary,
   },
-  settingsList: {
-    maxHeight: 300,
-  },
-  settingItem: {
+  modalActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    padding: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    gap: spacing.sm,
   },
-  settingLabel: {
-    ...typography.body,
+  cancelButton: {
+    flex: 1,
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.backgroundSecondary,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    ...typography.button,
     color: colors.textPrimary,
+  },
+  saveButton: {
+    flex: 1,
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    ...typography.button,
+    color: colors.white,
+    fontWeight: '600',
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 });
 
