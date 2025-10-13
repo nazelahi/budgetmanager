@@ -200,17 +200,16 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
         currency,
         theme: 'dark',
         notifications,
-        alertThresholds: {
-          warning: 80,
-          critical: 95,
-        },
       });
 
       // Add selected categories
       for (const categoryName of selectedCategories) {
         const category = defaultCategories.find(c => c.name === categoryName);
         if (category) {
-          await addCategory(category);
+          await addCategory({
+            ...category,
+            type: category.type as 'income' | 'expense'
+          });
         }
       }
 
@@ -220,7 +219,10 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
         const defaultIncomeCategories = defaultCategories.filter(c => c.type === 'income').slice(0, 2);
         
         for (const category of [...defaultExpenseCategories, ...defaultIncomeCategories]) {
-          await addCategory(category);
+          await addCategory({
+            ...category,
+            type: category.type as 'income' | 'expense'
+          });
         }
       }
 
@@ -258,10 +260,6 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
               <View style={styles.featureItem}>
                 <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
                 <Text style={styles.featureText}>Track income and expenses</Text>
-              </View>
-              <View style={styles.featureItem}>
-                <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
-                <Text style={styles.featureText}>Create and manage budgets</Text>
               </View>
               <View style={styles.featureItem}>
                 <Ionicons name="checkmark-circle" size={20} color={colors.primary} />

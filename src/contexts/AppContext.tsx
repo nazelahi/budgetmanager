@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { View, Text, ActivityIndicator } from 'react-native';
 import { AppData, Transaction, Category } from '../types';
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   name: string;
   email: string;

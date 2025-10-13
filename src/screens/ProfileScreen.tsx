@@ -328,19 +328,6 @@ const ProfileScreen: React.FC = () => {
           </Animated.View>
           <View style={styles.headerActions}>
             <Animated.View entering={SlideInRight.delay(300)} style={styles.headerActionContainer}>
-              <TouchableOpacity
-                style={styles.headerButton}
-                onPress={() => (navigation as any).navigate('Alerts')}
-              >
-                <Ionicons name="notifications-outline" size={18} color={colors.white} />
-                {unreadAlertsCount > 0 && (
-                  <View style={styles.alertBadge}>
-                    <Text style={styles.alertBadgeText}>
-                      {unreadAlertsCount > 99 ? '99+' : unreadAlertsCount}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
             </Animated.View>
             <Animated.View entering={SlideInRight.delay(400)} style={styles.headerActionContainer}>
               <TouchableOpacity
@@ -562,11 +549,6 @@ const ProfileScreen: React.FC = () => {
               <Ionicons name="pricetag" size={24} color={colors.primary} />
               <Text style={styles.statNumber}>{data?.categories?.length || 0}</Text>
               <Text style={styles.statLabel}>Categories</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Ionicons name="pie-chart" size={24} color={colors.primary} />
-              <Text style={styles.statNumber}>{data?.budgets?.length || 0}</Text>
-              <Text style={styles.statLabel}>Budgets</Text>
             </View>
           </View>
         </Animated.View>

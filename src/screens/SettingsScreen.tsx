@@ -207,7 +207,7 @@ const SettingsScreen: React.FC = () => {
             text: 'JSON (Full Backup)',
             onPress: async () => {
               try {
-                const jsonData = await data.exportToJSON();
+                const jsonData = await exportToJSON();
                 // In a real app, you'd use react-native-share to save/share the file
                 Alert.alert(
                   'Export Complete',
@@ -223,7 +223,7 @@ const SettingsScreen: React.FC = () => {
             text: 'CSV (Transactions)',
             onPress: async () => {
               try {
-                const csvData = await data.exportToCSV('transactions');
+                const csvData = await exportToCSV('transactions');
                 Alert.alert(
                   'Export Complete',
                   `Transactions exported to CSV successfully!\n\nCSV content preview:\n${csvData.substring(0, 200)}...`,
@@ -234,21 +234,6 @@ const SettingsScreen: React.FC = () => {
               }
             }
           },
-          {
-            text: 'CSV (Budgets)',
-            onPress: async () => {
-              try {
-                const csvData = await data.exportToCSV('budgets');
-                Alert.alert(
-                  'Export Complete',
-                  `Budgets exported to CSV successfully!\n\nCSV content preview:\n${csvData.substring(0, 200)}...`,
-                  [{ text: 'OK' }]
-                );
-              } catch (error) {
-                Alert.alert('Error', 'Failed to export budgets CSV');
-              }
-            }
-          }
         ]
       );
     } catch (error) {
@@ -260,7 +245,7 @@ const SettingsScreen: React.FC = () => {
     let csv = 'Type,Description,Amount,Category,Date\n';
     
     data.transactions.forEach(transaction => {
-      const category = data.categories.find(c => c.id === transaction.categoryId);
+      const category = data.categories.find(c => c.name === transaction.category);
       csv += `${transaction.type},${transaction.description},${transaction.amount},${category?.name || 'Unknown'},${transaction.date}\n`;
     });
     
@@ -270,16 +255,6 @@ const SettingsScreen: React.FC = () => {
       csv += `${category.name},${category.type},${category.color},${category.icon}\n`;
     });
     
-    csv += '\n\nBudgets\n';
-    csv += 'Category,Amount,Spent,Remaining\n';
-    data.budgets.forEach(budget => {
-      const category = data.categories.find(c => c.id === budget.categoryId);
-      const spent = data.transactions
-        .filter(t => t.categoryId === budget.categoryId && t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
-      const remaining = budget.amount - spent;
-      csv += `${category?.name || 'Unknown'},${budget.amount},${spent},${remaining}\n`;
-    });
     
     return csv;
   };
@@ -472,10 +447,6 @@ const SettingsScreen: React.FC = () => {
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{data.categories.length}</Text>
             <Text style={styles.statLabel}>Categories</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{data.budgets.length}</Text>
-            <Text style={styles.statLabel}>Budgets</Text>
           </View>
         </View>
       </View>
