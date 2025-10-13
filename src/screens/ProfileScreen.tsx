@@ -59,7 +59,6 @@ const ProfileScreen: React.FC = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
-  const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [isSaving, setIsSaving] = useState(false);
 
@@ -67,19 +66,7 @@ const ProfileScreen: React.FC = () => {
     loadProfile();
   }, []);
 
-  useEffect(() => {
-    loadUnreadAlertsCount();
-  }, [data?.budgetAlerts]);
 
-  const loadUnreadAlertsCount = async () => {
-    try {
-      const alertStats = await AlertService.getAlertStats();
-      setUnreadAlertsCount(alertStats.unread);
-    } catch (error) {
-      console.error('Error loading unread alerts count:', error);
-      setUnreadAlertsCount(0);
-    }
-  };
 
   const loadProfile = async () => {
     try {

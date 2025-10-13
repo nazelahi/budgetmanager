@@ -28,7 +28,6 @@ import TransactionsScreen from '../screens/TransactionsScreen';
 import EditTransactionScreen from '../screens/EditTransactionScreen';
 import EditCategoryScreen from '../screens/EditCategoryScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
-import AlertsScreen from '../screens/AlertsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import ReportScreen from '../screens/ReportScreen';
 import AddTransactionModal from '../components/AddTransactionModal';
@@ -670,16 +669,6 @@ const AppNavigator: React.FC = () => {
           component={CategoriesScreen}
           options={{
             headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="Alerts" 
-          component={AlertsScreen}
-          options={{
-            headerShown: false,
-            presentation: 'modal',
-            cardStyle: { backgroundColor: 'transparent' },
-            cardOverlayEnabled: true,
           }}
         />
         <Stack.Screen 

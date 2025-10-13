@@ -50,7 +50,6 @@ const AddTransactionScreen: React.FC = () => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
-  const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
 
   const incomeCategories = data.categories.filter(c => c.type === 'income');
   const expenseCategories = data.categories.filter(c => c.type === 'expense');
@@ -59,19 +58,7 @@ const AddTransactionScreen: React.FC = () => {
   // Quick amount buttons
   const quickAmounts = [10, 25, 50, 100, 250, 500];
 
-  useEffect(() => {
-    loadUnreadAlertsCount();
-  }, [data?.budgetAlerts]);
 
-  const loadUnreadAlertsCount = async () => {
-    try {
-      const alertStats = await AlertService.getAlertStats();
-      setUnreadAlertsCount(alertStats.unread);
-    } catch (error) {
-      console.error('Error loading unread alerts count:', error);
-      setUnreadAlertsCount(0);
-    }
-  };
 
   const handleSubmit = async () => {
     if (!amount || !description || !category) {

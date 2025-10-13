@@ -35,7 +35,6 @@ const ReportScreen: React.FC = () => {
   const { data } = useApp();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [reportData, setReportData] = useState<any>(null);
-  const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
 
   // Get transactions for selected year
   const getYearlyTransactions = () => {
@@ -120,19 +119,7 @@ const ReportScreen: React.FC = () => {
     setReportData(calculateYearlyStats());
   }, [selectedYear, data?.transactions]);
 
-  useEffect(() => {
-    loadUnreadAlertsCount();
-  }, [data?.budgetAlerts]);
 
-  const loadUnreadAlertsCount = async () => {
-    try {
-      const alertStats = await AlertService.getAlertStats();
-      setUnreadAlertsCount(alertStats.unread);
-    } catch (error) {
-      console.error('Error loading unread alerts count:', error);
-      setUnreadAlertsCount(0);
-    }
-  };
 
   const changeYear = (direction: 'prev' | 'next') => {
     const newYear = direction === 'prev' ? selectedYear - 1 : selectedYear + 1;

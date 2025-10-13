@@ -396,59 +396,58 @@ const DashboardScreen: React.FC = () => {
         </Animated.View>
 
         {/* Content */}
-        {activeTab === 'transactions' ? (
-          <Animated.View entering={SlideInRight.delay(800)} style={styles.transactionList}>
-            {recentTransactions.length > 0 ? (
-              recentTransactions.map((transaction, index) => (
-                <View key={transaction.id} style={styles.transactionCard}>
-                  <AnimatedCard 
-                    style={styles.transactionCardInner}
-                    delay={900 + (index * 100)}
+        <Animated.View entering={SlideInRight.delay(800)} style={styles.transactionList}>
+          {recentTransactions.length > 0 ? (
+            recentTransactions.map((transaction, index) => (
+              <View key={transaction.id} style={styles.transactionCard}>
+                <AnimatedCard 
+                  style={styles.transactionCardInner}
+                  delay={900 + (index * 100)}
+                >
+                  <TouchableOpacity
+                    style={styles.transactionContent}
+                    onPress={() => handleEditTransaction(transaction)}
+                    onLongPress={() => handleLongPress(transaction)}
                   >
-                    <TouchableOpacity
-                      style={styles.transactionContent}
-                      onPress={() => handleEditTransaction(transaction)}
-                      onLongPress={() => handleLongPress(transaction)}
-                    >
-                      <View style={styles.transactionLeft}>
-                        <View style={[
-                          styles.transactionIcon,
-                          { backgroundColor: getCategoryDetails(transaction.category, data.categories).color + '20' }
-                        ]}>
-                          <Ionicons 
-                            name={getCategoryDetails(transaction.category, data.categories).icon as any} 
-                            size={16} 
-                            color={getCategoryDetails(transaction.category, data.categories).color} 
-                          />
-                        </View>
-                        <View style={styles.transactionInfo}>
-                          <Text style={styles.transactionName}>{transaction.description}</Text>
-                          <Text style={styles.transactionCategory}>{transaction.category}</Text>
-                        </View>
+                    <View style={styles.transactionLeft}>
+                      <View style={[
+                        styles.transactionIcon,
+                        { backgroundColor: getCategoryDetails(transaction.category, data.categories).color + '20' }
+                      ]}>
+                        <Ionicons 
+                          name={getCategoryDetails(transaction.category, data.categories).icon as any} 
+                          size={16} 
+                          color={getCategoryDetails(transaction.category, data.categories).color} 
+                        />
                       </View>
-                      <View style={styles.transactionRight}>
-                        <Text style={[
-                          styles.transactionAmount,
-                          { color: transaction.type === 'income' ? colors.primary : colors.error }
-                        ]}>
-                          {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
-                        </Text>
-                        <Text style={styles.transactionDate}>
-                          {new Date(transaction.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </Text>
+                      <View style={styles.transactionInfo}>
+                        <Text style={styles.transactionName}>{transaction.description}</Text>
+                        <Text style={styles.transactionCategory}>{transaction.category}</Text>
                       </View>
-                    </TouchableOpacity>
-                  </AnimatedCard>
-                </View>
-              ))
-            ) : (
-              <Animated.View entering={FadeInDown.delay(800)} style={styles.emptyState}>
-                <Ionicons name="receipt-outline" size={48} color={colors.textSecondary} />
-                <Text style={styles.emptyStateText}>No transactions yet</Text>
-                <Text style={styles.emptyStateSubtext}>Add your first transaction to get started</Text>
-              </Animated.View>
-            )}
-          </Animated.View>
+                    </View>
+                    <View style={styles.transactionRight}>
+                      <Text style={[
+                        styles.transactionAmount,
+                        { color: transaction.type === 'income' ? colors.primary : colors.error }
+                      ]}>
+                        {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                      </Text>
+                      <Text style={styles.transactionDate}>
+                        {new Date(transaction.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </AnimatedCard>
+              </View>
+            ))
+          ) : (
+            <Animated.View entering={FadeInDown.delay(800)} style={styles.emptyState}>
+              <Ionicons name="receipt-outline" size={48} color={colors.textSecondary} />
+              <Text style={styles.emptyStateText}>No transactions yet</Text>
+              <Text style={styles.emptyStateSubtext}>Add your first transaction to get started</Text>
+            </Animated.View>
+          )}
+        </Animated.View>
         </ScrollView>
 
         {/* Edit Transaction Modal */}

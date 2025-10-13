@@ -41,25 +41,12 @@ const CategoriesScreen: React.FC = () => {
   const [categoryType, setCategoryType] = useState<'income' | 'expense'>('expense');
   const [categoryColor, setCategoryColor] = useState(colors.primary);
   const [categoryIcon, setCategoryIcon] = useState('pricetag');
-  const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
 
   // Animation values for header buttons
   const addButtonScale = useSharedValue(1);
   const addButtonRotation = useSharedValue(0);
 
-  useEffect(() => {
-    loadUnreadAlertsCount();
-  }, [data?.budgetAlerts]);
 
-  const loadUnreadAlertsCount = async () => {
-    try {
-      const alertStats = await AlertService.getAlertStats();
-      setUnreadAlertsCount(alertStats.unread);
-    } catch (error) {
-      console.error('Error loading unread alerts count:', error);
-      setUnreadAlertsCount(0);
-    }
-  };
 
   const colorOptions = [
     { id: 'primary', color: colors.primary },
