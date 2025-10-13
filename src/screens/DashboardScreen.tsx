@@ -448,17 +448,17 @@ const DashboardScreen: React.FC = () => {
               </Animated.View>
             )}
           </Animated.View>
-      </ScrollView>
+        </ScrollView>
 
-      {/* Edit Transaction Modal */}
-      {selectedTransaction && (
-        <EditTransactionModal
-          visible={editModalVisible}
-          onClose={handleCloseEditModal}
-          transaction={selectedTransaction}
-        />
-      )}
-    </View>
+        {/* Edit Transaction Modal */}
+        {selectedTransaction && (
+          <EditTransactionModal
+            visible={editModalVisible}
+            onClose={handleCloseEditModal}
+            transaction={selectedTransaction}
+          />
+        )}
+      </View>
   );
 };
 
