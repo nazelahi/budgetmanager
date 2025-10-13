@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
-import { AppData, Transaction, Category, FinancialAccount } from '../types';
+import { AppData, Transaction, Category } from '../types';
 
 export interface UserProfile {
   id: string;
@@ -54,7 +54,7 @@ interface AppContextType {
   
   // Account actions
   exportAccountData: () => Promise<any>;
-  deleteUserAccount: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   
   // Transaction management
   addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => Promise<void>;
@@ -65,12 +65,6 @@ interface AppContextType {
   addCategory: (category: Omit<Category, 'id'>) => Promise<void>;
   updateCategory: (id: string, updates: Partial<Category>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
-  
-  // Financial Account management
-  addAccount: (account: Omit<FinancialAccount, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateAccount: (id: string, updates: Partial<FinancialAccount>) => Promise<void>;
-  deleteAccount: (id: string) => Promise<void>;
-  getAccountById: (id: string) => FinancialAccount | undefined;
   
   
   // Data export/import
@@ -134,8 +128,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       setData({
         transactions: [],
         categories: [],
-        accounts: [],
-        accountTransactions: [],
         settings: {
           currency: 'USD',
           theme: 'dark',
@@ -205,14 +197,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
-  const deleteUserAccount = async () => {
+  const deleteAccount = async () => {
     try {
       await StorageService.clearAllData();
       setData({
         transactions: [],
         categories: [],
-        accounts: [],
-        accountTransactions: [],
         settings: {
           currency: 'USD',
           theme: 'dark',
@@ -316,50 +306,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     await refreshData();
   };
 
-  // Financial Account management
-  const addAccount = async (account: Omit<FinancialAccount, 'id' | 'createdAt' | 'updatedAt'>) => {
-    try {
-      const newAccount: FinancialAccount = {
-        ...account,
-        id: Date.now().toString(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      
-      await StorageService.addAccount(newAccount);
-      await refreshData();
-    } catch (error) {
-      throw ErrorHandler.createError(ErrorHandler.handleError(error, 'addAccount'), 'STORAGE_ERROR');
-    }
-  };
-
-  const updateAccount = async (id: string, updates: Partial<FinancialAccount>) => {
-    try {
-      const updatedAccount = {
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      };
-      
-      await StorageService.updateAccount(id, updatedAccount);
-      await refreshData();
-    } catch (error) {
-      throw ErrorHandler.createError(ErrorHandler.handleError(error, 'updateAccount'), 'STORAGE_ERROR');
-    }
-  };
-
-  const deleteAccount = async (id: string) => {
-    try {
-      await StorageService.deleteAccount(id);
-      await refreshData();
-    } catch (error) {
-      throw ErrorHandler.createError(ErrorHandler.handleError(error, 'deleteAccount'), 'STORAGE_ERROR');
-    }
-  };
-
-  const getAccountById = (id: string): FinancialAccount | undefined => {
-    return data?.accounts?.find(account => account.id === id);
-  };
-
 
   const updateSettings = async (settings: Partial<AppData['settings']>) => {
     try {
@@ -434,7 +380,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     
     // Account actions
     exportAccountData,
-    deleteUserAccount,
+    deleteAccount,
     
     // Transaction management
     addTransaction,
@@ -445,12 +391,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     addCategory,
     updateCategory,
     deleteCategory,
-    
-    // Financial Account management
-    addAccount,
-    updateAccount,
-    deleteAccount,
-    getAccountById,
     
     
     // Data export/import

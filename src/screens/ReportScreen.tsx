@@ -435,6 +435,10 @@ const ReportScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   headerContainer: {
     ...shadows.xl,
     elevation: 12,

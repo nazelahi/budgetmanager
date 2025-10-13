@@ -864,8 +864,8 @@ const styles = StyleSheet.create({
     color: colors.primary + 'AA',
   },
   currencyCardRight: {
-    alignItems: 'center',
     flexDirection: 'row',
+    alignItems: 'center',
   },
   currencySymbol: {
     ...typography.h4,
