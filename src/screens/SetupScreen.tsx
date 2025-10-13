@@ -972,9 +972,8 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   currencyListRight: {
-    alignItems: 'flex-end',
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
   },
   currencyListSymbol: {
     fontSize: 18,

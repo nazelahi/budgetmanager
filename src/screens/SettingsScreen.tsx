@@ -41,7 +41,7 @@ const { height: screenHeight } = Dimensions.get('window');
 
 const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
-  const { data, updateSettings } = useApp();
+  const { data, updateSettings, exportToJSON, exportToCSV } = useApp();
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [isUpdatingCurrency, setIsUpdatingCurrency] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -864,9 +864,8 @@ const styles = StyleSheet.create({
     color: colors.primary + 'AA',
   },
   currencyCardRight: {
-    alignItems: 'flex-end',
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
   },
   currencySymbol: {
     ...typography.h4,
