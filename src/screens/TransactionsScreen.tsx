@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { 
   FadeInDown, 
@@ -36,6 +37,7 @@ import AlertService from '../services/AlertService';
 const TransactionsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { data, deleteTransaction } = useApp();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -238,7 +240,7 @@ const TransactionsScreen: React.FC = () => {
           colors={['#1B263B', '#0D1B2A']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={styles.headerGradient}
+          style={[styles.headerGradient, { paddingTop: insets.top + spacing.xs }]}
         >
           <Animated.View entering={SlideInLeft.delay(200)} style={styles.headerTitleContainer}>
             <Ionicons name="receipt" size={18} color={colors.white} style={styles.headerIcon} />
@@ -388,7 +390,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
-    paddingTop: Platform.OS === 'ios' ? 44 + spacing.xs : 24 + spacing.xs,
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.1)',

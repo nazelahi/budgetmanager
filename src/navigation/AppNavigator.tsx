@@ -19,6 +19,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { colors, spacing, borderRadius, shadows, typography, gradients, animations } from '../utils/theme';
 import { useApp } from '../contexts/AppContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Import screens
 import DashboardScreen from '../screens/DashboardScreen';
@@ -34,6 +35,7 @@ import ReportScreen from '../screens/ReportScreen';
 import AddTransactionModal from '../components/AddTransactionModal';
 import ProfileScreen from '../screens/ProfileScreen';
 import SetupScreen from '../screens/SetupScreen';
+import ModernBackground from '../components/ModernBackground';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -54,6 +56,7 @@ const ModernHeader = ({ title, showBackButton = false, onBackPress, isDashboard 
   currentRoute?: string;
 }) => {
   const { data } = useApp();
+  const insets = useSafeAreaInsets();
   const headerOpacity = useSharedValue(0);
   const headerTranslateY = useSharedValue(-50);
 
@@ -248,7 +251,7 @@ const ModernHeader = ({ title, showBackButton = false, onBackPress, isDashboard 
   return (
     <Animated.View style={[styles.headerContainer, animatedHeaderStyle]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <View style={styles.headerGradient}>
+      <View style={[styles.headerGradient, { paddingTop: insets.top + spacing.xs }]}>
         <View style={styles.headerContent}>
           {/* Left Side - App Name (only for Dashboard) or Screen Title (for other screens) */}
           {isDashboard ? (
@@ -310,6 +313,7 @@ const ModernHeader = ({ title, showBackButton = false, onBackPress, isDashboard 
 // Modern Animated Tab Bar Component with Glassmorphism
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   const { profile } = useApp();
+  const insets = useSafeAreaInsets();
   const tabBarOpacity = useSharedValue(0);
   const tabBarTranslateY = useSharedValue(100);
 
@@ -325,7 +329,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
 
   return (
     <Animated.View style={[styles.tabBarContainer, animatedTabBarStyle]}>
-      <View style={styles.tabBarGradient}>
+      <View style={[styles.tabBarGradient, { paddingBottom: insets.bottom + (Platform.OS === 'ios' ? 16 : 8) }]}>
         <View style={styles.tabBarContent}>
           {state.routes.map((route: any, index: number) => {
             const { options } = descriptors[route.key];
@@ -638,12 +642,13 @@ const AppNavigator: React.FC = () => {
 
   return (
     <NavigationContainer ref={navigationRef}>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-        }}
-        initialRouteName="MainTabs"
-      >
+      <ModernBackground variant="gradient">
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+          }}
+          initialRouteName="MainTabs"
+        >
         <Stack.Screen 
           name="MainTabs" 
         >
@@ -708,7 +713,8 @@ const AppNavigator: React.FC = () => {
             headerShown: false,
           }}
         />
-      </Stack.Navigator>
+        </Stack.Navigator>
+      </ModernBackground>
     </NavigationContainer>
   );
 };
@@ -726,7 +732,6 @@ const styles = StyleSheet.create({
     ...shadows.lg,
   },
   headerGradient: {
-    paddingTop: Platform.OS === 'ios' ? 44 + spacing.xs : (StatusBar.currentHeight || 0) + spacing.xs,
     paddingBottom: 12,
     paddingHorizontal: spacing.md,
     backgroundColor: colors.background,
@@ -817,7 +822,6 @@ const styles = StyleSheet.create({
     ...shadows.lg,
   },
   tabBarGradient: {
-    paddingBottom: Platform.OS === 'ios' ? 16 : 8,
     paddingTop: 4,
     borderTopLeftRadius: borderRadius.lg,
     borderTopRightRadius: borderRadius.lg,

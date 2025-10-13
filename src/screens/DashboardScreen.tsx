@@ -16,6 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -38,6 +39,7 @@ const { width: screenWidth } = Dimensions.get('window');
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation();
   const { data, refreshData, deleteTransaction } = useApp();
+  const insets = useSafeAreaInsets();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'transactions' | 'budgets'>('transactions');
@@ -279,7 +281,7 @@ const DashboardScreen: React.FC = () => {
           colors={['#1B263B', '#0D1B2A']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={styles.headerGradient}
+          style={[styles.headerGradient, { paddingTop: insets.top + spacing.xs }]}
         >
           <Animated.View entering={SlideInLeft.delay(200)} style={styles.headerTitleContainer}>
             <Ionicons name="wallet" size={18} color={colors.white} style={styles.headerIcon} />
@@ -621,7 +623,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
-    paddingTop: Platform.OS === 'ios' ? 44 + spacing.xs : 24 + spacing.xs,
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.1)',

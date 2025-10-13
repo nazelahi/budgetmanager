@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
 import Animated, {
   FadeInDown,
   FadeInUp,
@@ -31,12 +30,17 @@ import Animated, {
 import { colors, spacing, typography, borderRadius, shadows, gradients } from '../utils/theme';
 import { useApp } from '../contexts/AppContext';
 import { UserProfile } from '../contexts/AppContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-const SetupScreen: React.FC = () => {
-  const navigation = useNavigation();
+interface SetupScreenProps {
+  onComplete?: () => void;
+}
+
+const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
   const { updateSettings, addCategory, updateProfile } = useApp();
+  const insets = useSafeAreaInsets();
   const [currentStep, setCurrentStep] = useState(0);
   const [profile, setProfile] = useState<Partial<UserProfile>>({
     name: '',
@@ -220,7 +224,7 @@ const SetupScreen: React.FC = () => {
         }
       }
 
-      (navigation as any).navigate('MainTabs');
+      onComplete?.();
     } catch (error) {
       Alert.alert('Error', 'Failed to complete setup. Please try again.');
       console.error('Setup completion error:', error);
@@ -657,7 +661,7 @@ const SetupScreen: React.FC = () => {
           colors={['#1B263B', '#0D1B2A']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={styles.headerGradient}
+          style={[styles.headerGradient, { paddingTop: insets.top + spacing.sm }]}
         >
           <Animated.View entering={SlideInLeft.delay(200)} style={styles.headerTitleContainer}>
             <Ionicons name="wallet" size={18} color={colors.white} style={styles.headerIcon} />
@@ -784,7 +788,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
-    paddingTop: Platform.OS === 'ios' ? 48 : 28,
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.1)',

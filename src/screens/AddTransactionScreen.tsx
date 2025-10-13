@@ -11,8 +11,8 @@ import {
   Platform,
   Dimensions,
   StatusBar,
-  SafeAreaView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -43,6 +43,7 @@ const { width: screenWidth } = Dimensions.get('window');
 const AddTransactionScreen: React.FC = () => {
   const navigation = useNavigation();
   const { data, addTransaction } = useApp();
+  const insets = useSafeAreaInsets();
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -121,7 +122,7 @@ const AddTransactionScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
       
       {/* Fixed Header */}
@@ -418,15 +419,11 @@ const AddTransactionScreen: React.FC = () => {
         </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   container: {
     flex: 1,
     backgroundColor: colors.background,

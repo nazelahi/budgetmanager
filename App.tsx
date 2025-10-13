@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusBar, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppProvider, useApp } from './src/contexts/AppContext';
@@ -11,11 +11,20 @@ import { colors } from './src/utils/theme';
 
 // Main App Component that handles setup flow
 const MainApp: React.FC = () => {
-  const { isSetupComplete, loading, completeSetup, updateProfile } = useApp();
+  const { isSetupComplete, loading, completeSetup } = useApp();
+  const [setupCompleted, setSetupCompleted] = useState(false);
+
+  // Watch for setup completion changes
+  useEffect(() => {
+    if (isSetupComplete) {
+      setSetupCompleted(true);
+    }
+  }, [isSetupComplete]);
 
   const handleSetupComplete = async () => {
     try {
       await completeSetup();
+      setSetupCompleted(true);
     } catch (error) {
       console.error('Error completing setup:', error);
     }
@@ -37,7 +46,7 @@ const MainApp: React.FC = () => {
     );
   }
 
-  if (!isSetupComplete) {
+  if (!isSetupComplete && !setupCompleted) {
     return (
       <ErrorBoundary>
         <SafeAreaProvider>
@@ -57,9 +66,7 @@ const MainApp: React.FC = () => {
   return (
     <ErrorBoundary>
       <SafeAreaProvider>
-        <ModernBackground variant="gradient">
-          <AppNavigator />
-        </ModernBackground>
+        <AppNavigator />
         <StatusBar 
           barStyle="light-content" 
           backgroundColor="transparent" 
