@@ -329,7 +329,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
 
   return (
     <Animated.View style={[styles.tabBarContainer, animatedTabBarStyle]}>
-      <View style={[styles.tabBarGradient, { paddingBottom: insets.bottom + (Platform.OS === 'ios' ? 16 : 8) }]}>
+      <View style={[styles.tabBarGradient, { paddingBottom: Math.max(insets.bottom - 8, 0) }]}>
         <View style={styles.tabBarContent}>
           {state.routes.map((route: any, index: number) => {
             const { options } = descriptors[route.key];
@@ -840,12 +840,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.xs,
+    paddingVertical: 2,
   },
   tabItemTouchable: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.xs,
+    paddingVertical: 2,
     paddingHorizontal: spacing.xs,
     borderRadius: borderRadius.md,
   },
