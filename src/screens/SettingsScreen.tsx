@@ -773,10 +773,6 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
   },
-  headerActions: {
-    width: 60,
-    alignItems: 'flex-end',
-  },
   searchContainer: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
