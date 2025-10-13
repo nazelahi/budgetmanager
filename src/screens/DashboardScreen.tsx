@@ -257,10 +257,11 @@ const DashboardScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <>
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
-      {/* Custom Header */}
+        {/* Custom Header */}
       <Animated.View entering={FadeInDown.delay(100)} style={styles.headerContainer}>
         <LinearGradient
           colors={['#1B263B', '#0D1B2A']}
@@ -459,6 +460,7 @@ const DashboardScreen: React.FC = () => {
           />
         )}
       </View>
+    </>
   );
 };
 
