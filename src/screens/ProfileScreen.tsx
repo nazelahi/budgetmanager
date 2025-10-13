@@ -28,7 +28,6 @@ import Animated, {
 import { useApp } from '../contexts/AppContext';
 import { colors, spacing, typography, borderRadius, shadows } from '../utils/theme';
 import StorageService from '../services/StorageService';
-import AlertService from '../services/AlertService';
 
 interface UserProfile {
   id: string;

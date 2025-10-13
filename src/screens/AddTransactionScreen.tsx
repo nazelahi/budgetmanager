@@ -36,7 +36,6 @@ import { colors, spacing, typography, borderRadius, shadows, gradients, animatio
 import { AnimatedCard, AnimatedButton } from '../components/AnimatedComponents';
 import { SimpleInput as AnimatedInput } from '../components/SimpleInput';
 import { Transaction } from '../types';
-import AlertService from '../services/AlertService';
 
 const { width: screenWidth } = Dimensions.get('window');
 

@@ -28,7 +28,6 @@ import { useApp } from '../contexts/AppContext';
 import { colors, spacing, typography, borderRadius, shadows, formatCurrencyAmount } from '../utils/theme';
 import { AnimatedCard } from '../components/AnimatedComponents';
 import DataService from '../services/DataService';
-import AlertService from '../services/AlertService';
 import { DashboardStats, Transaction } from '../types';
 import { getCategoryDetails } from '../utils/categoryUtils';
 import EditTransactionModal from './EditTransactionScreen';
@@ -45,7 +44,6 @@ const DashboardScreen: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
 
   const loadData = async () => {
     try {
@@ -107,15 +105,6 @@ const DashboardScreen: React.FC = () => {
   }, [data?.transactions]);
 
 
-  const loadUnreadAlertsCount = async () => {
-    try {
-      const alertStats = await AlertService.getAlertStats();
-      setUnreadAlertsCount(alertStats.unread);
-    } catch (error) {
-      console.error('Error loading unread alerts count:', error);
-      setUnreadAlertsCount(0);
-    }
-  };
 
   useEffect(() => {
     // Update stats when currentDate changes
@@ -285,19 +274,6 @@ const DashboardScreen: React.FC = () => {
           </Animated.View>
           <View style={styles.headerActions}>
             <Animated.View entering={SlideInRight.delay(300)} style={styles.headerActionContainer}>
-              <TouchableOpacity
-                style={styles.headerButton}
-                onPress={() => (navigation as any).navigate('Alerts')}
-              >
-                <Ionicons name="notifications-outline" size={18} color={colors.white} />
-                {unreadAlertsCount > 0 && (
-                  <View style={styles.alertBadge}>
-                    <Text style={styles.alertBadgeText}>
-                      {unreadAlertsCount > 99 ? '99+' : unreadAlertsCount}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
             </Animated.View>
             <Animated.View entering={SlideInRight.delay(400)} style={styles.headerActionContainer}>
               <TouchableOpacity
@@ -531,25 +507,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  alertBadge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    backgroundColor: colors.error,
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.background,
-  },
-  alertBadgeText: {
-    color: colors.white,
-    fontSize: 10,
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
   loadingContainer: {
     flex: 1,

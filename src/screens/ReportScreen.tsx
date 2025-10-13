@@ -27,7 +27,6 @@ import { colors, spacing, typography, borderRadius, shadows, formatCurrencyAmoun
 import { AnimatedCard } from '../components/AnimatedComponents';
 import ModernBackground from '../components/ModernBackground';
 import { Transaction } from '../types';
-import AlertService from '../services/AlertService';
 
 const { width: screenWidth } = Dimensions.get('window');
 

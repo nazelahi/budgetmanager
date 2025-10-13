@@ -30,7 +30,6 @@ import Animated, {
 import { useApp } from '../contexts/AppContext';
 import { colors, spacing, typography, borderRadius, shadows } from '../utils/theme';
 import { Category } from '../types';
-import AlertService from '../services/AlertService';
 
 const CategoriesScreen: React.FC = () => {
   const navigation = useNavigation();
