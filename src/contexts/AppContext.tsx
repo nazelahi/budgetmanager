@@ -32,6 +32,30 @@ interface AppContextType {
   refreshProfile: () => Promise<void>;
   updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
   
+  // Account settings management
+  accountSettings: {
+    notifications: boolean;
+    biometricAuth: boolean;
+    autoBackup: boolean;
+    darkMode: boolean;
+    currency: string;
+    language: string;
+    privacyMode: boolean;
+  };
+  updateAccountSettings: (settings: Partial<{
+    notifications: boolean;
+    biometricAuth: boolean;
+    autoBackup: boolean;
+    darkMode: boolean;
+    currency: string;
+    language: string;
+    privacyMode: boolean;
+  }>) => Promise<void>;
+  
+  // Account actions
+  exportAccountData: () => Promise<any>;
+  deleteAccount: () => Promise<void>;
+  
   // Transaction management
   addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => Promise<void>;
   updateTransaction: (id: string, updates: Partial<Transaction>) => Promise<void>;
@@ -79,6 +103,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showMoreModal, setShowMoreModal] = useState(false);
+  const [accountSettings, setAccountSettings] = useState({
+    notifications: true,
+    biometricAuth: false,
+    autoBackup: true,
+    darkMode: true,
+    currency: 'USD',
+    language: 'en',
+    privacyMode: false,
+  });
 
   const refreshData = async () => {
     try {
@@ -142,6 +175,56 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
+  const updateAccountSettings = async (settingsUpdates: Partial<typeof accountSettings>) => {
+    try {
+      const updatedSettings = {
+        ...accountSettings,
+        ...settingsUpdates,
+      };
+      
+      await StorageService.updateSettings(updatedSettings);
+      setAccountSettings(updatedSettings);
+    } catch (error) {
+      throw ErrorHandler.createError(ErrorHandler.handleError(error, 'updateAccountSettings'), 'STORAGE_ERROR');
+    }
+  };
+
+  const exportAccountData = async () => {
+    try {
+      return await DataExportService.exportToJSON();
+    } catch (error) {
+      throw ErrorHandler.createError(ErrorHandler.handleError(error, 'exportAccountData'), 'EXPORT_ERROR');
+    }
+  };
+
+  const deleteAccount = async () => {
+    try {
+      await StorageService.clearAllData();
+      setData({
+        transactions: [],
+        categories: [],
+        settings: {
+          currency: 'USD',
+          theme: 'dark',
+          notifications: true,
+        },
+      });
+      setProfile(null);
+      setAccountSettings({
+        notifications: true,
+        biometricAuth: false,
+        autoBackup: true,
+        darkMode: true,
+        currency: 'USD',
+        language: 'en',
+        privacyMode: false,
+      });
+      setIsSetupComplete(false);
+    } catch (error) {
+      throw ErrorHandler.createError(ErrorHandler.handleError(error, 'deleteAccount'), 'STORAGE_ERROR');
+    }
+  };
+
   const completeSetup = async () => {
     try {
       await StorageService.setSetupComplete(true);
@@ -155,6 +238,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const initializeApp = async () => {
       await refreshData();
       await refreshProfile();
+      
+      // Load account settings
+      try {
+        const settings = await StorageService.getSettings();
+        if (settings) {
+          setAccountSettings(prev => ({
+            ...prev,
+            ...settings,
+          }));
+        }
+      } catch (error) {
+        console.warn('Error loading account settings:', error);
+      }
       
       // Check if setup is complete
       try {
@@ -277,6 +373,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     profile,
     refreshProfile,
     updateProfile,
+    
+    // Account settings management
+    accountSettings,
+    updateAccountSettings,
+    
+    // Account actions
+    exportAccountData,
+    deleteAccount,
     
     // Transaction management
     addTransaction,

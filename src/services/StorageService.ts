@@ -116,6 +116,11 @@ class StorageService {
   }
 
 
+  async getSettings(): Promise<AppData['settings']> {
+    const data = await this.getData();
+    return data.settings;
+  }
+
   async updateSettings(settings: Partial<AppData['settings']>): Promise<void> {
     const data = await this.getData();
     data.settings = { ...data.settings, ...settings };

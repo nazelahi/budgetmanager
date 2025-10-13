@@ -32,6 +32,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 import ReportScreen from '../screens/ReportScreen';
 import AddTransactionModal from '../components/AddTransactionModal';
 import ProfileScreen from '../screens/ProfileScreen';
+import AccountScreen from '../screens/AccountScreen';
 import SetupScreen from '../screens/SetupScreen';
 import ModernBackground from '../components/ModernBackground';
 
@@ -363,8 +364,8 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
               iconName = isFocused ? 'grid' : 'grid-outline';
             } else if (route.name === 'Report') {
               iconName = isFocused ? 'bar-chart' : 'bar-chart-outline';
-            } else if (route.name === 'Profile') {
-              iconName = isFocused ? 'person' : 'person-outline';
+            } else if (route.name === 'Account') {
+              iconName = isFocused ? 'person-circle' : 'person-circle-outline';
             } else {
               iconName = 'help-outline';
             }
@@ -607,10 +608,10 @@ const TabNavigator: React.FC<{
             headerShown: false,
           }}
         />
-        <Tab.Screen 
-          name="Profile" 
-          component={ProfileScreen}
-          options={{ 
+        <Tab.Screen
+          name="Account"
+          component={AccountScreen}
+          options={{
             headerShown: false,
           }}
         />
