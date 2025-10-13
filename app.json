@@ -12,7 +12,8 @@
       "backgroundColor": "#0D1B2A"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nazelahi.budgetmanager"
     },
     "android": {
       "adaptiveIcon": {
