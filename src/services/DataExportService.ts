@@ -15,13 +15,10 @@ class DataExportService {
         exportDate: new Date().toISOString(),
         data: {
           ...data,
-          // Ensure all arrays exist
-          budgetAlerts: data.budgetAlerts || [],
         },
         metadata: {
           totalTransactions: data.transactions?.length || 0,
           totalCategories: data.categories?.length || 0,
-          totalBudgets: data.budgets?.length || 0,
         }
       };
 
@@ -60,31 +57,6 @@ class DataExportService {
     }
   }
 
-  /**
-   * Export budgets to CSV format
-   */
-  async exportBudgetsToCSV(): Promise<string> {
-    try {
-      const data = await StorageService.getData();
-      const budgets = data.budgets || [];
-      const categories = data.categories || [];
-      
-      let csv = 'Category,Amount,Spent,Remaining,Period,Start Date,End Date\n';
-      
-      budgets.forEach(budget => {
-        const category = categories.find(c => c.id === budget.categoryId);
-        const categoryName = category?.name || 'Unknown';
-        const remaining = budget.amount - budget.spent;
-        
-        csv += `"${this.escapeCSV(categoryName)}",${budget.amount},${budget.spent},${remaining},"${budget.period}","${budget.startDate}","${budget.endDate}"\n`;
-      });
-      
-      return csv;
-    } catch (error) {
-      console.error('Error exporting budgets to CSV:', error);
-      throw new Error('Failed to export budgets');
-    }
-  }
 
   /**
    * Export categories to CSV format
@@ -125,8 +97,6 @@ class DataExportService {
       report += `-------\n`;
       report += `Total Transactions: ${data.transactions?.length || 0}\n`;
       report += `Total Categories: ${data.categories?.length || 0}\n`;
-      report += `Total Budgets: ${data.budgets?.length || 0}\n`;
-      report += `Total Alerts: ${data.budgetAlerts?.length || 0}\n`;
       report += `Currency: ${data.settings?.currency || 'USD'}\n\n`;
       
       // Recent transactions
@@ -145,17 +115,6 @@ class DataExportService {
         report += `\n`;
       }
       
-      // Budgets
-      if (data.budgets && data.budgets.length > 0) {
-        report += `BUDGETS\n`;
-        report += `--------\n`;
-        data.budgets.forEach(budget => {
-          const category = data.categories?.find(c => c.id === budget.categoryId);
-          const percentage = budget.amount > 0 ? ((budget.spent / budget.amount) * 100).toFixed(1) : '0';
-          report += `${category?.name || 'Unknown'}: ${this.formatCurrency(budget.spent, data.settings?.currency)} / ${this.formatCurrency(budget.amount, data.settings?.currency)} (${percentage}%)\n`;
-        });
-        report += `\n`;
-      }
       
       return report;
     } catch (error) {
@@ -175,7 +134,6 @@ class DataExportService {
         imported: {
           transactions: 0,
           categories: 0,
-          budgets: 0,
         },
         errors: [],
         warnings: [],
@@ -230,22 +188,6 @@ class DataExportService {
         }
       }
 
-      // Import budgets
-      if (importedData.budgets && Array.isArray(importedData.budgets)) {
-        for (const budget of importedData.budgets) {
-          const validation = ValidationService.validateBudget(budget);
-          if (validation.isValid) {
-            if (!currentData.budgets) currentData.budgets = [];
-            currentData.budgets.push({
-              ...budget,
-              id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-            });
-            result.imported.budgets++;
-          } else {
-            result.errors.push(`Invalid budget: ${validation.errors.join(', ')}`);
-          }
-        }
-      }
 
 
       // Save imported data
@@ -257,7 +199,7 @@ class DataExportService {
       console.error('Error importing data from JSON:', error);
       return {
         success: false,
-        imported: { transactions: 0, categories: 0, budgets: 0 },
+        imported: { transactions: 0, categories: 0 },
         errors: ['Failed to parse import file'],
         warnings: [],
       };
@@ -287,11 +229,9 @@ class DataExportService {
    * Get export statistics
    */
   async getExportStats(): Promise<{
-    totalTransactions: number;
-    totalCategories: number;
-    totalBudgets: number;
-    totalAlerts: number;
-    dataSize: string;
+  totalTransactions: number;
+  totalCategories: number;
+  dataSize: string;
   }> {
     try {
       const data = await StorageService.getData();
@@ -301,8 +241,6 @@ class DataExportService {
       return {
         totalTransactions: data.transactions?.length || 0,
         totalCategories: data.categories?.length || 0,
-        totalBudgets: data.budgets?.length || 0,
-        totalAlerts: data.budgetAlerts?.length || 0,
         dataSize: this.formatBytes(dataSize),
       };
     } catch (error) {
@@ -310,8 +248,6 @@ class DataExportService {
       return {
         totalTransactions: 0,
         totalCategories: 0,
-        totalBudgets: 0,
-        totalAlerts: 0,
         dataSize: '0 B',
       };
     }

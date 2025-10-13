@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
-import { AppData, Transaction, Category, Budget, BudgetAlert } from '../types';
+import { AppData, Transaction, Category } from '../types';
 
 interface UserProfile {
   id: string;
@@ -15,7 +15,6 @@ interface UserProfile {
   updatedAt: string;
 }
 import StorageService from '../services/StorageService';
-import BudgetService from '../services/BudgetService';
 import AlertService from '../services/AlertService';
 import DataExportService from '../services/DataExportService';
 import { ValidationService, ErrorHandler } from '../utils/validation';
@@ -44,21 +43,10 @@ interface AppContextType {
   updateCategory: (id: string, updates: Partial<Category>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   
-  // Budget management
-  addBudget: (budget: Omit<Budget, 'id'>) => Promise<void>;
-  updateBudget: (id: string, updates: Partial<Budget>) => Promise<void>;
-  deleteBudget: (id: string) => Promise<void>;
-  
-  // Alert management
-  getAlerts: () => Promise<BudgetAlert[]>;
-  markAlertAsRead: (alertId: string) => Promise<void>;
-  markAllAlertsAsRead: () => Promise<void>;
-  deleteAlert: (alertId: string) => Promise<void>;
-  checkBudgetAlerts: () => Promise<BudgetAlert[]>;
   
   // Data export/import
   exportToJSON: () => Promise<string>;
-  exportToCSV: (type: 'transactions' | 'budgets' | 'categories') => Promise<string>;
+  exportToCSV: (type: 'transactions' | 'categories') => Promise<string>;
   importFromJSON: (jsonData: string) => Promise<{ success: boolean; imported: any; errors: string[]; warnings: string[] }>;
   
   // Settings
@@ -108,16 +96,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       setData({
         transactions: [],
         categories: [],
-        budgets: [],
-        budgetAlerts: [],
         settings: {
           currency: 'USD',
           theme: 'dark',
           notifications: true,
-          alertThresholds: {
-            warning: 80,
-            critical: 95,
-          },
         },
       });
     } finally {
@@ -184,12 +166,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setIsSetupComplete(false);
       }
       
-      // Check for budget alerts on app startup
-      try {
-        await AlertService.checkBudgetAlerts();
-      } catch (alertError) {
-        console.warn('Initial alert checking failed:', alertError);
-      }
     };
     
     initializeApp();
@@ -204,10 +180,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       }
 
       await StorageService.addTransaction(transaction);
-      // Update budget spent amounts after adding transaction
-      await BudgetService.updateAllBudgetsSpentAmounts();
-      // Check for new alerts
-      await AlertService.checkBudgetAlerts();
       await refreshData();
     } catch (error) {
       throw ErrorHandler.createError(ErrorHandler.handleError(error, 'addTransaction'), 'STORAGE_ERROR');
@@ -216,31 +188,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
     await StorageService.updateTransaction(id, updates);
-    // Update budget spent amounts after updating transaction
-    await BudgetService.updateAllBudgetsSpentAmounts();
-    
-    // Check for budget alerts after updating transaction
-    try {
-      await AlertService.checkBudgetAlerts();
-    } catch (alertError) {
-      console.warn('Alert checking failed:', alertError);
-    }
-    
     await refreshData();
   };
 
   const deleteTransaction = async (id: string) => {
     await StorageService.deleteTransaction(id);
-    // Update budget spent amounts after deleting transaction
-    await BudgetService.updateAllBudgetsSpentAmounts();
-    
-    // Check for budget alerts after deleting transaction
-    try {
-      await AlertService.checkBudgetAlerts();
-    } catch (alertError) {
-      console.warn('Alert checking failed:', alertError);
-    }
-    
     await refreshData();
   };
 
@@ -259,36 +211,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     await refreshData();
   };
 
-  const addBudget = async (budget: Omit<Budget, 'id'>) => {
-    await StorageService.addBudget(budget);
-    
-    // Check for budget alerts after adding budget
-    try {
-      await AlertService.checkBudgetAlerts();
-    } catch (alertError) {
-      console.warn('Alert checking failed:', alertError);
-    }
-    
-    await refreshData();
-  };
-
-  const updateBudget = async (id: string, updates: Partial<Budget>) => {
-    await StorageService.updateBudget(id, updates);
-    
-    // Check for budget alerts after updating budget
-    try {
-      await AlertService.checkBudgetAlerts();
-    } catch (alertError) {
-      console.warn('Alert checking failed:', alertError);
-    }
-    
-    await refreshData();
-  };
-
-  const deleteBudget = async (id: string) => {
-    await StorageService.deleteBudget(id);
-    await refreshData();
-  };
 
   const updateSettings = async (settings: Partial<AppData['settings']>) => {
     try {
@@ -300,49 +222,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
 
-  // Alert methods
-  const getAlerts = async () => {
-    try {
-      return await AlertService.getAllAlerts();
-    } catch (error) {
-      throw ErrorHandler.createError(ErrorHandler.handleError(error, 'getAlerts'), 'STORAGE_ERROR');
-    }
-  };
-
-  const markAlertAsRead = async (alertId: string) => {
-    try {
-      await AlertService.markAlertAsRead(alertId);
-      await refreshData();
-    } catch (error) {
-      throw ErrorHandler.createError(ErrorHandler.handleError(error, 'markAlertAsRead'), 'STORAGE_ERROR');
-    }
-  };
-
-  const markAllAlertsAsRead = async () => {
-    try {
-      await AlertService.markAllAlertsAsRead();
-      await refreshData();
-    } catch (error) {
-      throw ErrorHandler.createError(ErrorHandler.handleError(error, 'markAllAlertsAsRead'), 'STORAGE_ERROR');
-    }
-  };
-
-  const deleteAlert = async (alertId: string) => {
-    try {
-      await AlertService.deleteAlert(alertId);
-      await refreshData();
-    } catch (error) {
-      throw ErrorHandler.createError(ErrorHandler.handleError(error, 'deleteAlert'), 'STORAGE_ERROR');
-    }
-  };
-
-  const checkBudgetAlerts = async () => {
-    try {
-      return await AlertService.checkBudgetAlerts();
-    } catch (error) {
-      throw ErrorHandler.createError(ErrorHandler.handleError(error, 'checkBudgetAlerts'), 'STORAGE_ERROR');
-    }
-  };
 
   // Export/Import methods
   const exportToJSON = async () => {
@@ -354,13 +233,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
-  const exportToCSV = async (type: 'transactions' | 'budgets' | 'categories') => {
+  const exportToCSV = async (type: 'transactions' | 'categories') => {
     try {
       switch (type) {
         case 'transactions':
           return await DataExportService.exportTransactionsToCSV();
-        case 'budgets':
-          return await DataExportService.exportBudgetsToCSV();
         case 'categories':
           return await DataExportService.exportCategoriesToCSV();
         default:
@@ -412,17 +289,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     updateCategory,
     deleteCategory,
     
-    // Budget management
-    addBudget,
-    updateBudget,
-    deleteBudget,
-    
-    // Alert management
-    getAlerts,
-    markAlertAsRead,
-    markAllAlertsAsRead,
-    deleteAlert,
-    checkBudgetAlerts,
     
     // Data export/import
     exportToJSON,

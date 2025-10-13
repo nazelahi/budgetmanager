@@ -28,7 +28,6 @@ import TransactionsScreen from '../screens/TransactionsScreen';
 import EditTransactionScreen from '../screens/EditTransactionScreen';
 import EditCategoryScreen from '../screens/EditCategoryScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
-import BudgetScreen from '../screens/BudgetScreen';
 import AlertsScreen from '../screens/AlertsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import ReportScreen from '../screens/ReportScreen';
@@ -361,8 +360,6 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
               iconName = isFocused ? 'receipt' : 'receipt-outline';
             } else if (route.name === 'Add') {
               iconName = isFocused ? 'add-circle' : 'add-circle-outline';
-            } else if (route.name === 'Budget') {
-              iconName = isFocused ? 'pie-chart' : 'pie-chart-outline';
             } else if (route.name === 'Categories') {
               iconName = isFocused ? 'grid' : 'grid-outline';
             } else if (route.name === 'Report') {
@@ -603,13 +600,6 @@ const TabNavigator: React.FC<{
               setShowAddModal(true);
             },
           })}
-        />
-        <Tab.Screen 
-          name="Budget" 
-          component={BudgetScreen}
-          options={{ 
-            headerShown: false,
-          }}
         />
         <Tab.Screen 
           name="Report" 

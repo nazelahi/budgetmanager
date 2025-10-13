@@ -1,21 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppData, Transaction, Category, Budget } from '../types';
+import { AppData, Transaction, Category } from '../types';
 
 const STORAGE_KEY = 'budget_manager_data';
 
 const defaultData: AppData = {
   transactions: [],
   categories: [],
-  budgets: [],
-  budgetAlerts: [],
   settings: {
     currency: 'USD',
     theme: 'dark',
     notifications: true,
-    alertThresholds: {
-      warning: 80,
-      critical: 95,
-    },
   },
 };
 
@@ -121,30 +115,6 @@ class StorageService {
     await this.saveData(data);
   }
 
-  async addBudget(budget: Omit<Budget, 'id'>): Promise<void> {
-    const data = await this.getData();
-    const newBudget: Budget = {
-      ...budget,
-      id: Date.now().toString(),
-    };
-    data.budgets.push(newBudget);
-    await this.saveData(data);
-  }
-
-  async updateBudget(id: string, updates: Partial<Budget>): Promise<void> {
-    const data = await this.getData();
-    const index = data.budgets.findIndex(b => b.id === id);
-    if (index !== -1) {
-      data.budgets[index] = { ...data.budgets[index], ...updates };
-      await this.saveData(data);
-    }
-  }
-
-  async deleteBudget(id: string): Promise<void> {
-    const data = await this.getData();
-    data.budgets = data.budgets.filter(b => b.id !== id);
-    await this.saveData(data);
-  }
 
   async updateSettings(settings: Partial<AppData['settings']>): Promise<void> {
     const data = await this.getData();

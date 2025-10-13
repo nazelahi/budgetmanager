@@ -28,7 +28,6 @@ import { useApp } from '../contexts/AppContext';
 import { colors, spacing, typography, borderRadius, shadows, formatCurrencyAmount } from '../utils/theme';
 import { AnimatedCard } from '../components/AnimatedComponents';
 import DataService from '../services/DataService';
-import BudgetService from '../services/BudgetService';
 import AlertService from '../services/AlertService';
 import { DashboardStats, Transaction } from '../types';
 import { getCategoryDetails } from '../utils/categoryUtils';
@@ -42,7 +41,7 @@ const DashboardScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'transactions' | 'budgets'>('transactions');
+  const [activeTab, setActiveTab] = useState<'transactions'>('transactions');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -107,9 +106,6 @@ const DashboardScreen: React.FC = () => {
     loadData();
   }, [data?.transactions]);
 
-  useEffect(() => {
-    loadUnreadAlertsCount();
-  }, [data?.budgetAlerts]);
 
   const loadUnreadAlertsCount = async () => {
     try {
@@ -285,7 +281,7 @@ const DashboardScreen: React.FC = () => {
         >
           <Animated.View entering={SlideInLeft.delay(200)} style={styles.headerTitleContainer}>
             <Ionicons name="wallet" size={18} color={colors.white} style={styles.headerIcon} />
-            <Text style={styles.headerTitle}>Budget Manager</Text>
+            <Text style={styles.headerTitle}>Transaction Manager</Text>
           </Animated.View>
           <View style={styles.headerActions}>
             <Animated.View entering={SlideInRight.delay(300)} style={styles.headerActionContainer}>
@@ -420,19 +416,6 @@ const DashboardScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
           
-          <TouchableOpacity 
-            style={[styles.tabButton, activeTab === 'budgets' && styles.activeTabButton]}
-            onPress={() => setActiveTab('budgets')}
-          >
-            <Ionicons 
-              name="pie-chart" 
-              size={16} 
-              color={activeTab === 'budgets' ? colors.white : colors.textSecondary} 
-            />
-            <Text style={[styles.tabText, activeTab === 'budgets' && styles.activeTabText]}>
-              Budgets
-            </Text>
-          </TouchableOpacity>
         </Animated.View>
 
         {/* Content */}
@@ -489,112 +472,6 @@ const DashboardScreen: React.FC = () => {
               </Animated.View>
             )}
           </Animated.View>
-        ) : (
-          <Animated.View entering={SlideInRight.delay(800)} style={styles.budgetsContent}>
-            {data?.budgets && data.budgets.length > 0 ? (
-              <View>
-                {/* Budget Statistics */}
-                <Animated.View entering={FadeInDown.delay(100)} style={styles.budgetStatsContainer}>
-                  {(() => {
-                    const stats = BudgetService.getBudgetStatistics(data.budgets);
-                    return (
-                      <View style={styles.budgetStats}>
-                        <View style={styles.budgetStatItem}>
-                          <Text style={styles.budgetStatValue}>{formatCurrency(stats.totalBudgeted)}</Text>
-                          <Text style={styles.budgetStatLabel}>Total Budgeted</Text>
-                        </View>
-                        <View style={styles.budgetStatItem}>
-                          <Text style={styles.budgetStatValue}>{formatCurrency(stats.totalSpent)}</Text>
-                          <Text style={styles.budgetStatLabel}>Total Spent</Text>
-                        </View>
-                        <View style={styles.budgetStatItem}>
-                          <Text style={[styles.budgetStatValue, { color: stats.totalRemaining > 0 ? colors.primary : colors.error }]}>
-                            {formatCurrency(stats.totalRemaining)}
-                          </Text>
-                          <Text style={styles.budgetStatLabel}>Remaining</Text>
-                        </View>
-                      </View>
-                    );
-                  })()}
-                </Animated.View>
-                
-                <View style={styles.budgetsList}>
-                {data.budgets.map((budget, index) => {
-                  const category = data.categories?.find(c => c.id === budget.categoryId);
-                  const percentage = BudgetService.calculateProgressPercentage(budget);
-                  const progressColor = BudgetService.getBudgetStatusColor(budget);
-                  
-                  return (
-                    <View key={budget.id} style={styles.budgetCard}>
-                      <AnimatedCard 
-                        style={styles.budgetCardInner}
-                        delay={900 + (index * 100)}
-                      >
-                        <View style={styles.budgetContent}>
-                          <View style={styles.budgetLeft}>
-                            <View style={[
-                              styles.budgetIcon,
-                              { backgroundColor: (category?.color || colors.primary) + '20' }
-                            ]}>
-                              <Ionicons 
-                                name={category?.icon as any || 'wallet'} 
-                                size={16} 
-                                color={category?.color || colors.primary} 
-                              />
-                            </View>
-                            <View style={styles.budgetInfo}>
-                              <Text style={styles.budgetName}>{category?.name || 'Unknown'}</Text>
-                              <Text style={styles.budgetPeriod}>{budget.period.charAt(0).toUpperCase() + budget.period.slice(1)}</Text>
-                              <View style={styles.budgetProgress}>
-                                <View style={styles.budgetProgressBar}>
-                                  <View 
-                                    style={[
-                                      styles.budgetProgressFill, 
-                                      { 
-                                        width: `${percentage}%`, 
-                                        backgroundColor: progressColor 
-                                      }
-                                    ]} 
-                                  />
-                                </View>
-                                <Text style={styles.budgetProgressText}>{percentage.toFixed(0)}%</Text>
-                              </View>
-                            </View>
-                          </View>
-                          <View style={styles.budgetRight}>
-                            <Text style={styles.budgetAmount}>{formatCurrency(budget.amount)}</Text>
-                            <Text style={styles.budgetSpent}>Spent: {formatCurrency(budget.spent)}</Text>
-                          </View>
-                        </View>
-                      </AnimatedCard>
-                    </View>
-                  );
-                })}
-                </View>
-                <TouchableOpacity 
-                  style={styles.budgetButton}
-                  onPress={() => navigation.navigate('Budget' as never)}
-                >
-                  <Ionicons name="add-circle-outline" size={24} color={colors.primary} />
-                  <Text style={styles.budgetButtonText}>Add New Budget</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.emptyState}>
-                <Ionicons name="pie-chart-outline" size={48} color={colors.textSecondary} />
-                <Text style={styles.emptyStateText}>No Budgets Yet</Text>
-                <Text style={styles.emptyStateSubtext}>Create budgets to track your spending</Text>
-                <TouchableOpacity 
-                  style={styles.budgetButton}
-                  onPress={() => navigation.navigate('Budget' as never)}
-                >
-                  <Ionicons name="add-circle-outline" size={24} color={colors.primary} />
-                  <Text style={styles.budgetButtonText}>Create Your First Budget</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </Animated.View>
-        )}
       </ScrollView>
 
       {/* Edit Transaction Modal */}
@@ -911,146 +788,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   
-  // Budgets Content
-  budgetsContent: {
-    paddingHorizontal: spacing.sm,
-  },
-  budgetStatsContainer: {
-    marginBottom: spacing.sm,
-  },
-  budgetStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    ...shadows.sm,
-  },
-  budgetStatItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  budgetStatValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.white,
-    marginBottom: spacing.xs,
-  },
-  budgetStatLabel: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  budgetsList: {
-    gap: spacing.sm,
-  },
-  budgetCard: {
-    marginBottom: spacing.sm,
-  },
-  budgetCardInner: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    ...shadows.sm,
-  },
-  budgetContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
-  budgetLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  budgetIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
-  },
-  budgetInfo: {
-    flex: 1,
-  },
-  budgetName: {
-    fontSize: 14,
-    color: colors.white,
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-  },
-  budgetPeriod: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-  },
-  budgetProgress: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  budgetProgressBar: {
-    flex: 1,
-    height: 4,
-    backgroundColor: colors.gray200,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  budgetProgressFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  budgetProgressText: {
-    fontSize: 10,
-    color: colors.textSecondary,
-    fontWeight: '600',
-    minWidth: 25,
-    textAlign: 'right',
-  },
-  budgetRight: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-  },
-  budgetAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: spacing.xs,
-    color: colors.white,
-  },
-  budgetSpent: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  budgetButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-    ...shadows.sm,
-  },
-  budgetButtonText: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  budgetButtonSubtext: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-  },
   
 });
 

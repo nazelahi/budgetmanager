@@ -72,37 +72,6 @@ export class ValidationService {
     };
   }
   
-  static validateBudget(data: {
-    amount: string | number;
-    categoryId: string;
-    period: 'monthly' | 'weekly' | 'yearly';
-  }): ValidationResult {
-    const errors: string[] = [];
-    
-    // Amount validation
-    const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
-    if (!amount || isNaN(amount) || amount <= 0) {
-      errors.push('Budget amount must be a positive number');
-    }
-    if (amount > 999999999) {
-      errors.push('Budget amount cannot exceed $999,999,999');
-    }
-    
-    // Category validation
-    if (!data.categoryId || data.categoryId.trim().length === 0) {
-      errors.push('Category is required');
-    }
-    
-    // Period validation
-    if (!data.period || !['monthly', 'weekly', 'yearly'].includes(data.period)) {
-      errors.push('Budget period must be monthly, weekly, or yearly');
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }
   
   static validateCategory(data: {
     name: string;
