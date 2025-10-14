@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
-import { AppData, Transaction, Category } from '../types';
+import { AppData, Transaction, Category, Budget, BudgetAlert, AlertHistory, SmartSuggestion, AlertSettings } from '../types';
 
 export interface UserProfile {
   id: string;
@@ -65,6 +65,32 @@ interface AppContextType {
   addCategory: (category: Omit<Category, 'id'>) => Promise<void>;
   updateCategory: (id: string, updates: Partial<Category>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
+  
+  // Budget management
+  addBudget: (budget: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateBudget: (id: string, updates: Partial<Budget>) => Promise<void>;
+  deleteBudget: (id: string) => Promise<void>;
+  getBudgets: () => Promise<Budget[]>;
+  getActiveBudgets: () => Promise<Budget[]>;
+  
+  // Budget alerts
+  addBudgetAlert: (alert: Omit<BudgetAlert, 'id' | 'createdAt'>) => Promise<void>;
+  markAlertAsRead: (alertId: string) => Promise<void>;
+  getUnreadAlerts: () => Promise<BudgetAlert[]>;
+  clearAllAlerts: () => Promise<void>;
+  
+  // Alert history
+  getAlertHistory: (days?: number) => Promise<AlertHistory[]>;
+  clearAlertHistory: () => Promise<void>;
+  
+  // Smart suggestions
+  getSmartSuggestions: () => Promise<SmartSuggestion[]>;
+  deleteSmartSuggestion: (id: string) => Promise<void>;
+  clearSmartSuggestions: () => Promise<void>;
+  
+  // Alert settings
+  getAlertSettings: () => Promise<AlertSettings>;
+  updateAlertSettings: (settings: Partial<AlertSettings>) => Promise<void>;
   
   
   // Data export/import
@@ -227,9 +253,21 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const completeSetup = async () => {
     try {
+      console.log('🎯 Starting setup completion...');
       await StorageService.setSetupComplete(true);
       setIsSetupComplete(true);
+      console.log('✅ Setup completion flag set to true');
+      
+      // Also update the data object to reflect setup completion
+      if (data) {
+        const updatedData = { ...data, isSetupComplete: true };
+        setData(updatedData);
+        await StorageService.saveData(updatedData);
+        console.log('✅ Data object updated with setup completion');
+      }
+      console.log('🎉 Setup completion successful!');
     } catch (error) {
+      console.error('❌ Setup completion error:', error);
       throw ErrorHandler.createError(ErrorHandler.handleError(error, 'completeSetup'), 'STORAGE_ERROR');
     }
   };
@@ -255,7 +293,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       // Check if setup is complete
       try {
         const setupComplete = await StorageService.getSetupComplete();
-        setIsSetupComplete(setupComplete);
+        const dataSetupComplete = data?.isSetupComplete || false;
+        setIsSetupComplete(setupComplete || dataSetupComplete);
       } catch (error) {
         console.warn('Error checking setup status:', error);
         setIsSetupComplete(false);
@@ -303,6 +342,85 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const deleteCategory = async (id: string) => {
     await StorageService.deleteCategory(id);
+    await refreshData();
+  };
+
+  // Budget management functions
+  const addBudget = async (budget: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => {
+    await StorageService.addBudget(budget);
+    await refreshData();
+  };
+
+  const updateBudget = async (id: string, updates: Partial<Budget>) => {
+    await StorageService.updateBudget(id, updates);
+    await refreshData();
+  };
+
+  const deleteBudget = async (id: string) => {
+    await StorageService.deleteBudget(id);
+    await refreshData();
+  };
+
+  const getBudgets = async () => {
+    return await StorageService.getBudgets();
+  };
+
+  const getActiveBudgets = async () => {
+    return await StorageService.getActiveBudgets();
+  };
+
+  // Budget alert functions
+  const addBudgetAlert = async (alert: Omit<BudgetAlert, 'id' | 'createdAt'>) => {
+    await StorageService.addBudgetAlert(alert);
+    await refreshData();
+  };
+
+  const markAlertAsRead = async (alertId: string) => {
+    await StorageService.markAlertAsRead(alertId);
+    await refreshData();
+  };
+
+  const getUnreadAlerts = async () => {
+    return await StorageService.getUnreadAlerts();
+  };
+
+  const clearAllAlerts = async () => {
+    await StorageService.clearAllAlerts();
+    await refreshData();
+  };
+
+  // Alert history functions
+  const getAlertHistory = async (days: number = 30) => {
+    return await StorageService.getAlertHistory();
+  };
+
+  const clearAlertHistory = async () => {
+    await StorageService.clearAlertHistory();
+    await refreshData();
+  };
+
+  // Smart suggestions functions
+  const getSmartSuggestions = async () => {
+    return await StorageService.getSmartSuggestions();
+  };
+
+  const deleteSmartSuggestion = async (id: string) => {
+    await StorageService.deleteSmartSuggestion(id);
+    await refreshData();
+  };
+
+  const clearSmartSuggestions = async () => {
+    await StorageService.clearSmartSuggestions();
+    await refreshData();
+  };
+
+  // Alert settings functions
+  const getAlertSettings = async () => {
+    return await StorageService.getAlertSettings();
+  };
+
+  const updateAlertSettings = async (settings: Partial<AlertSettings>) => {
+    await StorageService.updateAlertSettings(settings);
     await refreshData();
   };
 
@@ -391,6 +509,32 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     addCategory,
     updateCategory,
     deleteCategory,
+    
+    // Budget management
+    addBudget,
+    updateBudget,
+    deleteBudget,
+    getBudgets,
+    getActiveBudgets,
+    
+    // Budget alerts
+    addBudgetAlert,
+    markAlertAsRead,
+    getUnreadAlerts,
+    clearAllAlerts,
+    
+    // Alert history
+    getAlertHistory,
+    clearAlertHistory,
+    
+    // Smart suggestions
+    getSmartSuggestions,
+    deleteSmartSuggestion,
+    clearSmartSuggestions,
+    
+    // Alert settings
+    getAlertSettings,
+    updateAlertSettings,
     
     
     // Data export/import

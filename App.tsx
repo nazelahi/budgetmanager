@@ -7,6 +7,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import SetupScreen from './src/screens/SetupScreen';
 import ModernBackground from './src/components/ModernBackground';
 import ErrorBoundary from './src/components/ErrorBoundary';
+import BudgetAlerts from './src/components/BudgetAlerts';
 import { colors } from './src/utils/theme';
 
 // Main App Component that handles setup flow
@@ -23,10 +24,13 @@ const MainApp: React.FC = () => {
 
   const handleSetupComplete = async () => {
     try {
+      console.log('🚀 Setup screen completed, calling completeSetup...');
       await completeSetup();
+      console.log('✅ completeSetup finished, setting setupCompleted to true');
       setSetupCompleted(true);
+      console.log('🎉 Setup flow completed successfully!');
     } catch (error) {
-      console.error('Error completing setup:', error);
+      console.error('❌ Error completing setup:', error);
     }
   };
 
@@ -47,6 +51,7 @@ const MainApp: React.FC = () => {
   }
 
   if (!isSetupComplete && !setupCompleted) {
+    console.log('📱 Rendering SetupScreen - isSetupComplete:', isSetupComplete, 'setupCompleted:', setupCompleted);
     return (
       <ErrorBoundary>
         <SafeAreaProvider>
@@ -63,10 +68,12 @@ const MainApp: React.FC = () => {
     );
   }
 
+  console.log('📱 Rendering AppNavigator - isSetupComplete:', isSetupComplete, 'setupCompleted:', setupCompleted);
   return (
     <ErrorBoundary>
       <SafeAreaProvider>
         <AppNavigator />
+        <BudgetAlerts />
         <StatusBar 
           barStyle="light-content" 
           backgroundColor="transparent" 

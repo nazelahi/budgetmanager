@@ -28,7 +28,8 @@ import { useApp } from '../contexts/AppContext';
 import { colors, spacing, typography, borderRadius, shadows, formatCurrencyAmount } from '../utils/theme';
 import { AnimatedCard } from '../components/AnimatedComponents';
 import DataService from '../services/DataService';
-import { DashboardStats, Transaction } from '../types';
+import BudgetService from '../services/BudgetService';
+import { DashboardStats, Transaction, BudgetStats } from '../types';
 import { getCategoryDetails } from '../utils/categoryUtils';
 import EditTransactionModal from './EditTransactionScreen';
 
@@ -39,8 +40,9 @@ const DashboardScreen: React.FC = () => {
   const { data, refreshData, deleteTransaction } = useApp();
   const insets = useSafeAreaInsets();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [budgetStats, setBudgetStats] = useState<BudgetStats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'transactions'>('transactions');
+  const [activeTab, setActiveTab] = useState<'transactions' | 'budget'>('transactions');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -48,8 +50,12 @@ const DashboardScreen: React.FC = () => {
   const loadData = async () => {
     try {
       if (data && data.transactions) {
-        const statsData = await DataService.getDashboardStats();
+        const [statsData, budgetData] = await Promise.all([
+          DataService.getDashboardStats(),
+          BudgetService.getBudgetStats('monthly')
+        ]);
         setStats(statsData);
+        setBudgetStats(budgetData);
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -62,6 +68,14 @@ const DashboardScreen: React.FC = () => {
         monthlyExpenses: 0,
         monthlyBalance: 0,
         topCategories: [],
+      });
+      setBudgetStats({
+        totalBudgeted: 0,
+        totalSpent: 0,
+        remaining: 0,
+        percentageUsed: 0,
+        isOverBudget: false,
+        categories: [],
       });
       // Calculate stats from actual data
       const currentMonth = new Date().getMonth();
@@ -275,6 +289,12 @@ const DashboardScreen: React.FC = () => {
           </Animated.View>
           <View style={styles.headerActions}>
             <Animated.View entering={SlideInRight.delay(300)} style={styles.headerActionContainer}>
+              <TouchableOpacity
+                style={styles.headerButton}
+                onPress={() => (navigation as any).navigate('AlertsDashboard')}
+              >
+                <Ionicons name="notifications-outline" size={18} color={colors.white} />
+              </TouchableOpacity>
             </Animated.View>
             <Animated.View entering={SlideInRight.delay(400)} style={styles.headerActionContainer}>
               <TouchableOpacity
@@ -393,61 +413,143 @@ const DashboardScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
           
+          <TouchableOpacity 
+            style={[styles.tabButton, activeTab === 'budget' && styles.activeTabButton]}
+            onPress={() => setActiveTab('budget')}
+          >
+            <Ionicons 
+              name="card" 
+              size={16} 
+              color={activeTab === 'budget' ? colors.white : colors.textSecondary} 
+            />
+            <Text style={[styles.tabText, activeTab === 'budget' && styles.activeTabText]}>
+              Budget
+            </Text>
+          </TouchableOpacity>
         </Animated.View>
 
         {/* Content */}
-        <Animated.View entering={SlideInRight.delay(800)} style={styles.transactionList}>
-          {recentTransactions.length > 0 ? (
-            recentTransactions.map((transaction, index) => (
-              <View key={transaction.id} style={styles.transactionCard}>
+        {activeTab === 'transactions' ? (
+          <Animated.View entering={SlideInRight.delay(800)} style={styles.transactionList}>
+            {recentTransactions.length > 0 ? (
+              recentTransactions.map((transaction, index) => (
+                <View key={transaction.id} style={styles.transactionCard}>
+                  <AnimatedCard 
+                    style={styles.transactionCardInner}
+                    delay={900 + (index * 100)}
+                  >
+                    <TouchableOpacity
+                      style={styles.transactionContent}
+                      onPress={() => handleEditTransaction(transaction)}
+                      onLongPress={() => handleLongPress(transaction)}
+                    >
+                      <View style={styles.transactionLeft}>
+                        <View style={[
+                          styles.transactionIcon,
+                          { backgroundColor: getCategoryDetails(transaction.category, data.categories).color + '20' }
+                        ]}>
+                          <Ionicons 
+                            name={getCategoryDetails(transaction.category, data.categories).icon as any} 
+                            size={16} 
+                            color={getCategoryDetails(transaction.category, data.categories).color} 
+                          />
+                        </View>
+                        <View style={styles.transactionInfo}>
+                          <Text style={styles.transactionName}>{transaction.description}</Text>
+                          <Text style={styles.transactionCategory}>{transaction.category}</Text>
+                        </View>
+                      </View>
+                      <View style={styles.transactionRight}>
+                        <Text style={[
+                          styles.transactionAmount,
+                          { color: transaction.type === 'income' ? colors.primary : colors.error }
+                        ]}>
+                          {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                        </Text>
+                        <Text style={styles.transactionDate}>
+                          {new Date(transaction.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </AnimatedCard>
+                </View>
+              ))
+            ) : (
+              <Animated.View entering={FadeInDown.delay(800)} style={styles.emptyState}>
+                <Ionicons name="receipt-outline" size={48} color={colors.textSecondary} />
+                <Text style={styles.emptyStateText}>No transactions yet</Text>
+                <Text style={styles.emptyStateSubtext}>Add your first transaction to get started</Text>
+              </Animated.View>
+            )}
+          </Animated.View>
+        ) : (
+          <Animated.View entering={SlideInRight.delay(800)} style={styles.budgetList}>
+            {budgetStats && budgetStats.categories.length > 0 ? (
+              budgetStats.categories.map((category, index) => (
                 <AnimatedCard 
-                  style={styles.transactionCardInner}
+                  key={category.categoryId} 
+                  style={styles.budgetCard}
                   delay={900 + (index * 100)}
                 >
-                  <TouchableOpacity
-                    style={styles.transactionContent}
-                    onPress={() => handleEditTransaction(transaction)}
-                    onLongPress={() => handleLongPress(transaction)}
-                  >
-                    <View style={styles.transactionLeft}>
-                      <View style={[
-                        styles.transactionIcon,
-                        { backgroundColor: getCategoryDetails(transaction.category, data.categories).color + '20' }
-                      ]}>
+                  <View style={styles.budgetCardContent}>
+                    <View style={styles.budgetCardLeft}>
+                      <View style={styles.budgetIcon}>
                         <Ionicons 
-                          name={getCategoryDetails(transaction.category, data.categories).icon as any} 
-                          size={16} 
-                          color={getCategoryDetails(transaction.category, data.categories).color} 
+                          name={data.categories.find(c => c.id === category.categoryId)?.icon as any || 'pricetag'} 
+                          size={20} 
+                          color={colors.primary} 
                         />
                       </View>
-                      <View style={styles.transactionInfo}>
-                        <Text style={styles.transactionName}>{transaction.description}</Text>
-                        <Text style={styles.transactionCategory}>{transaction.category}</Text>
+                      <View style={styles.budgetInfo}>
+                        <Text style={styles.budgetCategoryName}>{category.categoryName}</Text>
+                        <Text style={styles.budgetAmount}>{formatCurrency(category.budgeted)}</Text>
                       </View>
                     </View>
-                    <View style={styles.transactionRight}>
-                      <Text style={[
-                        styles.transactionAmount,
-                        { color: transaction.type === 'income' ? colors.primary : colors.error }
-                      ]}>
-                        {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
-                      </Text>
-                      <Text style={styles.transactionDate}>
-                        {new Date(transaction.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    
+                    <View style={styles.budgetCardRight}>
+                      <View style={styles.budgetProgress}>
+                        <View style={styles.budgetProgressBar}>
+                          <View 
+                            style={[
+                              styles.budgetProgressFill,
+                              {
+                                width: `${Math.min(category.percentageUsed, 100)}%`,
+                                backgroundColor: category.isOverBudget ? colors.error : 
+                                              category.percentageUsed >= 80 ? colors.warning || '#FFA500' : 
+                                              category.percentageUsed >= 50 ? colors.primary : colors.success || '#4CAF50'
+                              }
+                            ]}
+                          />
+                        </View>
+                        <Text style={[
+                          styles.budgetPercentage,
+                          { color: category.isOverBudget ? colors.error : colors.primary }
+                        ]}>
+                          {category.percentageUsed.toFixed(0)}%
+                        </Text>
+                      </View>
+                      <Text style={styles.budgetSpent}>
+                        {formatCurrency(category.spent)} spent
                       </Text>
                     </View>
-                  </TouchableOpacity>
+                  </View>
                 </AnimatedCard>
-              </View>
-            ))
-          ) : (
-            <Animated.View entering={FadeInDown.delay(800)} style={styles.emptyState}>
-              <Ionicons name="receipt-outline" size={48} color={colors.textSecondary} />
-              <Text style={styles.emptyStateText}>No transactions yet</Text>
-              <Text style={styles.emptyStateSubtext}>Add your first transaction to get started</Text>
-            </Animated.View>
-          )}
-        </Animated.View>
+              ))
+            ) : (
+              <Animated.View entering={FadeInDown.delay(800)} style={styles.emptyState}>
+                <Ionicons name="card-outline" size={48} color={colors.textSecondary} />
+                <Text style={styles.emptyStateText}>No budgets set</Text>
+                <Text style={styles.emptyStateSubtext}>Create your first budget to start tracking spending</Text>
+                <TouchableOpacity 
+                  style={styles.createBudgetButton}
+                  onPress={() => (navigation as any).navigate('Budget')}
+                >
+                  <Text style={styles.createBudgetButtonText}>Create Budget</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            )}
+          </Animated.View>
+        )}
         </ScrollView>
 
         {/* Edit Transaction Modal */}
@@ -746,7 +848,89 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   
-  
+  // Budget styles
+  budgetList: {
+    paddingHorizontal: spacing.sm,
+  },
+  budgetCard: {
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    borderRadius: borderRadius.lg,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    ...shadows.sm,
+  },
+  budgetCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+  },
+  budgetCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  budgetIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  budgetInfo: {
+    flex: 1,
+  },
+  budgetCategoryName: {
+    fontSize: 14,
+    color: colors.white,
+    fontWeight: '600',
+    marginBottom: spacing.xs,
+  },
+  budgetAmount: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  budgetCardRight: {
+    alignItems: 'flex-end',
+  },
+  budgetProgress: {
+    alignItems: 'flex-end',
+    marginBottom: spacing.xs,
+  },
+  budgetProgressBar: {
+    width: 80,
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginBottom: spacing.xs,
+  },
+  budgetProgressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  budgetPercentage: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  budgetSpent: {
+    fontSize: 12,
+    color: colors.textTertiary,
+  },
+  createBudgetButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    marginTop: spacing.md,
+  },
+  createBudgetButtonText: {
+    color: colors.white,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 });
 
 export default DashboardScreen;

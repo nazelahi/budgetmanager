@@ -13,7 +13,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nazelahi.budgetmanager"
+      "bundleIdentifier": "com.nazelahi.budgetmanager",
+      "icon": "./assets/icon.png",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.nazelahi.budgetmanager",
@@ -30,6 +34,12 @@
     "plugins": [
       "expo-font"
     ],
+    "updates": {
+      "url": "https://u.expo.dev/6265e41f-cf77-4bac-a5fc-4566b87d1faf"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "extra": {
       "eas": {
         "projectId": "6265e41f-cf77-4bac-a5fc-4566b87d1faf"

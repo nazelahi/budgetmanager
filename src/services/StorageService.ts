@@ -1,16 +1,33 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppData, Transaction, Category } from '../types';
+import { AppData, Transaction, Category, Budget, BudgetAlert, AlertHistory, SmartSuggestion, AlertSettings } from '../types';
 
 const STORAGE_KEY = 'budget_manager_data';
 
 const defaultData: AppData = {
   transactions: [],
   categories: [],
+  budgets: [],
+  budgetAlerts: [],
+  alertHistory: [],
+  smartSuggestions: [],
+  alertSettings: {
+    warningThresholds: [70, 80, 90],
+    enablePushNotifications: true,
+    enableEmailNotifications: false,
+    quietHours: {
+      enabled: true,
+      start: '22:00',
+      end: '08:00',
+    },
+    alertFrequency: 'immediate',
+    smartSuggestions: true,
+  },
   settings: {
     currency: 'USD',
     theme: 'dark',
     notifications: true,
   },
+  isSetupComplete: false,
 };
 
 class StorageService {
@@ -42,6 +59,26 @@ class StorageService {
       'shopping-bag': 'bag',
       'medical-bag': 'medical',
     };
+
+    // Ensure all required arrays exist
+    if (!data.budgets) {
+      data.budgets = [];
+    }
+    if (!data.budgetAlerts) {
+      data.budgetAlerts = [];
+    }
+    if (!data.alertHistory) {
+      data.alertHistory = [];
+    }
+    if (!data.smartSuggestions) {
+      data.smartSuggestions = [];
+    }
+    if (!data.alertSettings) {
+      data.alertSettings = defaultData.alertSettings;
+    }
+    if (typeof data.isSetupComplete !== 'boolean') {
+      data.isSetupComplete = false;
+    }
 
     // Migrate category icons
     if (data.categories) {
@@ -115,6 +152,145 @@ class StorageService {
     await this.saveData(data);
   }
 
+  // Budget management methods
+  async addBudget(budget: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>): Promise<void> {
+    const data = await this.getData();
+    const newBudget: Budget = {
+      ...budget,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    data.budgets.push(newBudget);
+    await this.saveData(data);
+  }
+
+  async updateBudget(id: string, updates: Partial<Budget>): Promise<void> {
+    const data = await this.getData();
+    const index = data.budgets.findIndex(b => b.id === id);
+    if (index !== -1) {
+      data.budgets[index] = { 
+        ...data.budgets[index], 
+        ...updates, 
+        updatedAt: new Date().toISOString() 
+      };
+      await this.saveData(data);
+    }
+  }
+
+  async deleteBudget(id: string): Promise<void> {
+    const data = await this.getData();
+    data.budgets = data.budgets.filter(b => b.id !== id);
+    // Also remove related budget alerts
+    data.budgetAlerts = data.budgetAlerts.filter(a => a.budgetId !== id);
+    await this.saveData(data);
+  }
+
+  async getBudgets(): Promise<Budget[]> {
+    const data = await this.getData();
+    return data.budgets || [];
+  }
+
+  async getActiveBudgets(): Promise<Budget[]> {
+    const data = await this.getData();
+    return (data.budgets || []).filter(b => b.isActive);
+  }
+
+  // Budget alert methods
+  async addBudgetAlert(alert: Omit<BudgetAlert, 'id' | 'createdAt'>): Promise<void> {
+    const data = await this.getData();
+    const newAlert: BudgetAlert = {
+      ...alert,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+    };
+    data.budgetAlerts.push(newAlert);
+    await this.saveData(data);
+  }
+
+  async markAlertAsRead(alertId: string): Promise<void> {
+    const data = await this.getData();
+    const index = data.budgetAlerts.findIndex(a => a.id === alertId);
+    if (index !== -1) {
+      data.budgetAlerts[index].isRead = true;
+      await this.saveData(data);
+    }
+  }
+
+  async getUnreadAlerts(): Promise<BudgetAlert[]> {
+    const data = await this.getData();
+    return (data.budgetAlerts || []).filter(a => !a.isRead);
+  }
+
+  async clearAllAlerts(): Promise<void> {
+    const data = await this.getData();
+    data.budgetAlerts = [];
+    await this.saveData(data);
+  }
+
+  // Alert History methods
+  async addAlertHistory(history: Omit<AlertHistory, 'id' | 'createdAt'>): Promise<void> {
+    const data = await this.getData();
+    const newHistory: AlertHistory = {
+      ...history,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+    };
+    data.alertHistory.unshift(newHistory); // Add to beginning for chronological order
+    await this.saveData(data);
+  }
+
+  async getAlertHistory(): Promise<AlertHistory[]> {
+    const data = await this.getData();
+    return data.alertHistory || [];
+  }
+
+  async clearAlertHistory(): Promise<void> {
+    const data = await this.getData();
+    data.alertHistory = [];
+    await this.saveData(data);
+  }
+
+  // Smart Suggestions methods
+  async addSmartSuggestion(suggestion: Omit<SmartSuggestion, 'id' | 'createdAt'>): Promise<void> {
+    const data = await this.getData();
+    const newSuggestion: SmartSuggestion = {
+      ...suggestion,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+    };
+    data.smartSuggestions.unshift(newSuggestion);
+    await this.saveData(data);
+  }
+
+  async getSmartSuggestions(): Promise<SmartSuggestion[]> {
+    const data = await this.getData();
+    return data.smartSuggestions || [];
+  }
+
+  async deleteSmartSuggestion(id: string): Promise<void> {
+    const data = await this.getData();
+    data.smartSuggestions = data.smartSuggestions.filter(s => s.id !== id);
+    await this.saveData(data);
+  }
+
+  async clearSmartSuggestions(): Promise<void> {
+    const data = await this.getData();
+    data.smartSuggestions = [];
+    await this.saveData(data);
+  }
+
+  // Alert Settings methods
+  async updateAlertSettings(settings: Partial<AlertSettings>): Promise<void> {
+    const data = await this.getData();
+    data.alertSettings = { ...data.alertSettings, ...settings };
+    await this.saveData(data);
+  }
+
+  async getAlertSettings(): Promise<AlertSettings> {
+    const data = await this.getData();
+    return data.alertSettings || defaultData.alertSettings;
+  }
 
   async getSettings(): Promise<AppData['settings']> {
     const data = await this.getData();

@@ -28,6 +28,7 @@ import TransactionsScreen from '../screens/TransactionsScreen';
 import EditTransactionScreen from '../screens/EditTransactionScreen';
 import EditCategoryScreen from '../screens/EditCategoryScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
+import BudgetScreen from '../screens/BudgetScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import ReportScreen from '../screens/ReportScreen';
 import AddTransactionModal from '../components/AddTransactionModal';
@@ -35,6 +36,12 @@ import ProfileScreen from '../screens/ProfileScreen';
 import AccountScreen from '../screens/AccountScreen';
 import SetupScreen from '../screens/SetupScreen';
 import ModernBackground from '../components/ModernBackground';
+
+// Alert screens
+import AlertsDashboardScreen from '../screens/AlertsDashboardScreen';
+import AlertSettingsScreen from '../screens/AlertSettingsScreen';
+import AlertHistoryScreen from '../screens/AlertHistoryScreen';
+import SmartSuggestionsScreen from '../screens/SmartSuggestionsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -358,10 +365,12 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
               iconName = isFocused ? 'wallet' : 'wallet-outline';
             } else if (route.name === 'Transactions') {
               iconName = isFocused ? 'receipt' : 'receipt-outline';
-            } else if (route.name === 'Add') {
-              iconName = isFocused ? 'add-circle' : 'add-circle-outline';
             } else if (route.name === 'Categories') {
               iconName = isFocused ? 'grid' : 'grid-outline';
+            } else if (route.name === 'Budget') {
+              iconName = isFocused ? 'card' : 'card-outline';
+            } else if (route.name === 'Add') {
+              iconName = isFocused ? 'add-circle' : 'add-circle-outline';
             } else if (route.name === 'Report') {
               iconName = isFocused ? 'bar-chart' : 'bar-chart-outline';
             } else if (route.name === 'Account') {
@@ -602,6 +611,13 @@ const TabNavigator: React.FC<{
           })}
         />
         <Tab.Screen 
+          name="Budget" 
+          component={BudgetScreen}
+          options={{ 
+            headerShown: false,
+          }}
+        />
+        <Tab.Screen 
           name="Report" 
           component={ReportScreen}
           options={{ 
@@ -689,6 +705,36 @@ const AppNavigator: React.FC = () => {
         <Stack.Screen 
           name="Setup" 
           component={SetupScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
+        
+        {/* Alert Screens */}
+        <Stack.Screen 
+          name="AlertsDashboard" 
+          component={AlertsDashboardScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen 
+          name="AlertSettings" 
+          component={AlertSettingsScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen 
+          name="AlertHistory" 
+          component={AlertHistoryScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen 
+          name="SmartSuggestions" 
+          component={SmartSuggestionsScreen}
           options={{
             headerShown: false,
           }}
