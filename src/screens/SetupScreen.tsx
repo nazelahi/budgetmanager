@@ -372,7 +372,7 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
               <View style={styles.placeholderContainer}>
                 <Ionicons name="cash-outline" size={48} color={colors.textTertiary} />
                 <Text style={styles.placeholderText}>Select a currency to continue</Text>
-                <Text style={styles.placeholderSubtext}>Choose from the list below</Text>
+                <Text style={styles.placeholderSubtext}>Choose from the tabs below</Text>
               </View>
             ) : null}
             
@@ -382,14 +382,11 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
               </View>
             )}
             
-            <ScrollView 
-              style={styles.currencyList}
-              showsVerticalScrollIndicator={false}
-            >
+            <View style={styles.currencyListContainer}>
               {currencies.map((curr, index) => (
                 <Animated.View 
                   key={curr.code}
-                  entering={FadeInDown.delay(300 + (index * 50))}
+                  entering={FadeInDown.delay(300 + (index * 30))}
                 >
                   <TouchableOpacity
                     style={[
@@ -445,18 +442,37 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
                   </TouchableOpacity>
                 </Animated.View>
               ))}
-            </ScrollView>
+            </View>
+            
+            {currency && (
+              <Animated.View entering={FadeInUp.delay(500)} style={styles.selectedCurrencyInfo}>
+                <View style={styles.selectedCurrencyCard}>
+                  <Text style={styles.selectedCurrencyFlag}>
+                    {currencies.find(c => c.code === currency)?.flag}
+                  </Text>
+                  <View style={styles.selectedCurrencyDetails}>
+                    <Text style={styles.selectedCurrencyName}>
+                      {currencies.find(c => c.code === currency)?.name}
+                    </Text>
+                    <Text style={styles.selectedCurrencyCountry}>
+                      {currencies.find(c => c.code === currency)?.country}
+                    </Text>
+                  </View>
+                  <View style={styles.selectedCurrencyRight}>
+                    <Text style={styles.selectedCurrencySymbol}>
+                      {currencies.find(c => c.code === currency)?.symbol}
+                    </Text>
+                    <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+                  </View>
+                </View>
+              </Animated.View>
+            )}
           </Animated.View>
         );
 
       case 3:
         return (
           <Animated.View entering={SlideInRight.delay(200)} style={styles.stepContainer}>
-            <Text style={styles.stepTitle}>Choose Your Categories</Text>
-            <Text style={styles.stepDescription}>
-              Select the categories you'll use most often. You can always add more later.
-            </Text>
-            
             {selectedCategories.length === 0 ? (
               <View style={styles.placeholderContainer}>
                 <Ionicons name="grid-outline" size={48} color={colors.textTertiary} />
@@ -465,14 +481,11 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
               </View>
             ) : null}
             
-            <ScrollView 
-              style={styles.categoriesList}
-              showsVerticalScrollIndicator={false}
-            >
+            <View style={styles.categoriesListContainer}>
               {defaultCategories.map((category, index) => (
                 <Animated.View 
                   key={category.name}
-                  entering={FadeInDown.delay(300 + (index * 50))}
+                  entering={FadeInDown.delay(300 + (index * 30))}
                 >
                   <TouchableOpacity
                     style={[
@@ -488,7 +501,7 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
                       ]}>
                         <Ionicons 
                           name={category.icon as any} 
-                          size={20} 
+                          size={18} 
                           color={category.color} 
                         />
                       </View>
@@ -511,7 +524,7 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
                       {selectedCategories.includes(category.name) && (
                         <Ionicons 
                           name="checkmark-circle" 
-                          size={20} 
+                          size={18} 
                           color={colors.primary} 
                           style={styles.categoryCheckIcon}
                         />
@@ -520,7 +533,7 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
                   </TouchableOpacity>
                 </Animated.View>
               ))}
-            </ScrollView>
+            </View>
           </Animated.View>
         );
 
@@ -923,10 +936,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   
-  // Currency Step
-  currencyList: {
+  // Currency Step - Compact List View
+  currencyListContainer: {
     width: '100%',
-    maxHeight: 400,
+    marginVertical: spacing.md,
   },
   currencyListItem: {
     flexDirection: 'row',
@@ -934,14 +947,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: colors.backgroundTertiary,
     borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.xs,
     borderWidth: 1,
     borderColor: colors.border,
   },
   currencyListItemSelected: {
     backgroundColor: colors.primary + '20',
     borderColor: colors.primary,
+    borderWidth: 2,
   },
   currencyListLeft: {
     flexDirection: 'row',
@@ -949,14 +964,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   currencyFlag: {
-    fontSize: 24,
+    fontSize: 20,
     marginRight: spacing.md,
   },
   currencyListInfo: {
     flex: 1,
   },
   currencyListName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: colors.textPrimary,
     marginBottom: spacing.xs,
@@ -965,7 +980,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   currencyListCountry: {
-    fontSize: 14,
+    fontSize: 12,
     color: colors.textSecondary,
   },
   currencyListCountrySelected: {
@@ -976,7 +991,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   currencyListSymbol: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: colors.textPrimary,
     marginRight: spacing.sm,
@@ -985,7 +1000,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   currencyListCode: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     color: colors.textSecondary,
     marginRight: spacing.sm,
@@ -995,6 +1010,48 @@ const styles = StyleSheet.create({
   },
   currencyCheckIcon: {
     marginLeft: spacing.xs,
+  },
+  
+  // Selected Currency Info
+  selectedCurrencyInfo: {
+    width: '100%',
+    marginTop: spacing.md,
+  },
+  selectedCurrencyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary + '10',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.primary + '30',
+  },
+  selectedCurrencyFlag: {
+    fontSize: 24,
+    marginRight: spacing.md,
+  },
+  selectedCurrencyDetails: {
+    flex: 1,
+  },
+  selectedCurrencyName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
+    marginBottom: spacing.xs,
+  },
+  selectedCurrencyCountry: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  selectedCurrencyRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  selectedCurrencySymbol: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginRight: spacing.sm,
   },
   placeholderContainer: {
     alignItems: 'center',
@@ -1015,10 +1072,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   
-  // Categories Step
-  categoriesList: {
+  // Categories Step - Compact List View
+  categoriesListContainer: {
     width: '100%',
-    maxHeight: 400,
+    marginVertical: spacing.md,
   },
   categoryListItem: {
     flexDirection: 'row',
@@ -1026,14 +1083,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: colors.backgroundTertiary,
     borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.xs,
     borderWidth: 1,
     borderColor: colors.border,
   },
   categoryListItemSelected: {
     backgroundColor: colors.primary + '20',
     borderColor: colors.primary,
+    borderWidth: 2,
   },
   categoryListLeft: {
     flexDirection: 'row',
@@ -1041,9 +1100,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   categoryListIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
@@ -1052,7 +1111,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   categoryListName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: colors.textPrimary,
     marginBottom: spacing.xs,
@@ -1061,7 +1120,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   categoryListType: {
-    fontSize: 14,
+    fontSize: 12,
     color: colors.textSecondary,
     textTransform: 'capitalize',
   },

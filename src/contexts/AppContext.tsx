@@ -16,6 +16,7 @@ export interface UserProfile {
 }
 import StorageService from '../services/StorageService';
 import DataExportService from '../services/DataExportService';
+import BudgetService from '../services/BudgetService';
 import { ValidationService, ErrorHandler } from '../utils/validation';
 
 interface AppContextType {
@@ -145,6 +146,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       const appData = await StorageService.getData();
       if (appData && typeof appData === 'object') {
         setData(appData);
+        
+        // Check for budget alerts after refreshing data
+        try {
+          await BudgetService.checkBudgetAlerts();
+        } catch (error) {
+          console.error('Error checking budget alerts:', error);
+        }
       } else {
         throw new Error('Invalid data format');
       }
@@ -253,19 +261,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const completeSetup = async () => {
     try {
-      console.log('🎯 Starting setup completion...');
       await StorageService.setSetupComplete(true);
       setIsSetupComplete(true);
-      console.log('✅ Setup completion flag set to true');
       
       // Also update the data object to reflect setup completion
       if (data) {
         const updatedData = { ...data, isSetupComplete: true };
         setData(updatedData);
         await StorageService.saveData(updatedData);
-        console.log('✅ Data object updated with setup completion');
       }
-      console.log('🎉 Setup completion successful!');
     } catch (error) {
       console.error('❌ Setup completion error:', error);
       throw ErrorHandler.createError(ErrorHandler.handleError(error, 'completeSetup'), 'STORAGE_ERROR');
@@ -315,6 +319,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       await StorageService.addTransaction(transaction);
       await refreshData();
+      
+      // Check for budget alerts after adding transaction
+      if (transaction.type === 'expense') {
+        try {
+          await BudgetService.checkBudgetAlerts();
+        } catch (error) {
+          console.error('Error checking budget alerts:', error);
+        }
+      }
     } catch (error) {
       throw ErrorHandler.createError(ErrorHandler.handleError(error, 'addTransaction'), 'STORAGE_ERROR');
     }
@@ -323,11 +336,27 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
     await StorageService.updateTransaction(id, updates);
     await refreshData();
+    
+    // Check for budget alerts after updating transaction
+    if (updates.type === 'expense' || (updates.amount !== undefined && updates.type !== 'income')) {
+      try {
+        await BudgetService.checkBudgetAlerts();
+      } catch (error) {
+        console.error('Error checking budget alerts:', error);
+      }
+    }
   };
 
   const deleteTransaction = async (id: string) => {
     await StorageService.deleteTransaction(id);
     await refreshData();
+    
+    // Check for budget alerts after deleting transaction
+    try {
+      await BudgetService.checkBudgetAlerts();
+    } catch (error) {
+      console.error('Error checking budget alerts:', error);
+    }
   };
 
   const addCategory = async (category: Omit<Category, 'id'>) => {
@@ -349,16 +378,37 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const addBudget = async (budget: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => {
     await StorageService.addBudget(budget);
     await refreshData();
+    
+    // Check for budget alerts after adding budget
+    try {
+      await BudgetService.checkBudgetAlerts();
+    } catch (error) {
+      console.error('Error checking budget alerts:', error);
+    }
   };
 
   const updateBudget = async (id: string, updates: Partial<Budget>) => {
     await StorageService.updateBudget(id, updates);
     await refreshData();
+    
+    // Check for budget alerts after updating budget
+    try {
+      await BudgetService.checkBudgetAlerts();
+    } catch (error) {
+      console.error('Error checking budget alerts:', error);
+    }
   };
 
   const deleteBudget = async (id: string) => {
     await StorageService.deleteBudget(id);
     await refreshData();
+    
+    // Check for budget alerts after deleting budget
+    try {
+      await BudgetService.checkBudgetAlerts();
+    } catch (error) {
+      console.error('Error checking budget alerts:', error);
+    }
   };
 
   const getBudgets = async () => {

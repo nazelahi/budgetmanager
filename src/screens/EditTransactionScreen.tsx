@@ -27,6 +27,7 @@ import Animated, {
 import { useApp } from '../contexts/AppContext';
 import { colors, spacing, typography, borderRadius, shadows, gradients, getCurrencySymbol } from '../utils/theme';
 import { Transaction } from '../types';
+import BottomModal from '../components/BottomModal';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -54,25 +55,8 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ visible, on
   // Quick amount buttons - more compact
   const quickAmounts = [10, 25, 50, 100, 200, 500];
 
-  // Animation values
-  const modalTranslateY = useSharedValue(screenHeight);
-  const backdropOpacity = useSharedValue(0);
-
-  useEffect(() => {
-    if (visible) {
-      modalTranslateY.value = withSpring(0, { damping: 20, stiffness: 300 });
-      backdropOpacity.value = withTiming(1, { duration: 300 });
-    } else {
-      modalTranslateY.value = withTiming(screenHeight, { duration: 300 });
-      backdropOpacity.value = withTiming(0, { duration: 300 });
-    }
-  }, [visible]);
-
   const handleClose = () => {
-    modalTranslateY.value = withTiming(screenHeight, { duration: 300 });
-    backdropOpacity.value = withTiming(0, { duration: 300 }, () => {
-      runOnJS(onClose)();
-    });
+    onClose();
   };
 
   const handleSave = async () => {
@@ -116,36 +100,17 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ visible, on
     setAmount(amount.toString());
   };
 
-  const animatedModalStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: modalTranslateY.value }],
-  }));
-
-  const animatedBackdropStyle = useAnimatedStyle(() => ({
-    opacity: backdropOpacity.value,
-  }));
 
   return (
-    <Modal
+    <BottomModal
       visible={visible}
-      transparent
-      animationType="none"
-      statusBarTranslucent
-      onRequestClose={handleClose}
+      onClose={handleClose}
+      title="Edit Transaction"
+      showSaveButton={true}
+      onSave={handleSave}
+      saveButtonDisabled={!amount || !description || !category || loading}
+      isLoading={loading}
     >
-      <Animated.View style={[styles.backdrop, animatedBackdropStyle]}>
-        <Pressable style={styles.backdropPressable} onPress={handleClose} />
-        
-        <Animated.View style={[styles.modalContainer, animatedModalStyle]}>
-          {/* Compact Header */}
-          <View style={styles.header}>
-            <View style={styles.handle} />
-            <View style={styles.headerContent}>
-              <Text style={styles.title}>Edit Transaction</Text>
-              <TouchableOpacity style={styles.closeBtn} onPress={handleClose}>
-                <Ionicons name="close" size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-          </View>
 
           <ScrollView 
             style={styles.content}
@@ -332,9 +297,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ visible, on
               </TouchableOpacity>
             </Animated.View>
           </KeyboardAvoidingView>
-        </Animated.View>
-      </Animated.View>
-    </Modal>
+    </BottomModal>
   );
 };
 

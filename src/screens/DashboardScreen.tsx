@@ -27,6 +27,7 @@ import Animated, {
 import { useApp } from '../contexts/AppContext';
 import { colors, spacing, typography, borderRadius, shadows, formatCurrencyAmount } from '../utils/theme';
 import { AnimatedCard } from '../components/AnimatedComponents';
+import SimpleAnimatedWrapper from '../components/SimpleAnimatedWrapper';
 import DataService from '../services/DataService';
 import BudgetService from '../services/BudgetService';
 import { DashboardStats, Transaction, BudgetStats } from '../types';
@@ -285,7 +286,7 @@ const DashboardScreen: React.FC = () => {
         >
           <Animated.View entering={SlideInLeft.delay(200)} style={styles.headerTitleContainer}>
             <Ionicons name="wallet" size={18} color={colors.white} style={styles.headerIcon} />
-            <Text style={styles.headerTitle}>Transaction Manager</Text>
+            <Text style={styles.headerTitle}>Money Pro</Text>
           </Animated.View>
           <View style={styles.headerActions}>
             <Animated.View entering={SlideInRight.delay(300)} style={styles.headerActionContainer}>
@@ -433,10 +434,14 @@ const DashboardScreen: React.FC = () => {
           <Animated.View entering={SlideInRight.delay(800)} style={styles.transactionList}>
             {recentTransactions.length > 0 ? (
               recentTransactions.map((transaction, index) => (
-                <View key={transaction.id} style={styles.transactionCard}>
+                <SimpleAnimatedWrapper 
+                  key={transaction.id} 
+                  delay={index * 100} 
+                  direction="right"
+                  style={styles.transactionCard}
+                >
                   <AnimatedCard 
                     style={styles.transactionCardInner}
-                    delay={900 + (index * 100)}
                   >
                     <TouchableOpacity
                       style={styles.transactionContent}
@@ -472,7 +477,7 @@ const DashboardScreen: React.FC = () => {
                       </View>
                     </TouchableOpacity>
                   </AnimatedCard>
-                </View>
+                </SimpleAnimatedWrapper>
               ))
             ) : (
               <Animated.View entering={FadeInDown.delay(800)} style={styles.emptyState}>

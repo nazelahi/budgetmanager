@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,24 +8,13 @@ import {
   ScrollView,
   Alert,
   Dimensions,
-  Modal,
-  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  runOnJS,
-  FadeIn,
-  SlideInUp,
-} from 'react-native-reanimated';
 import { useApp } from '../contexts/AppContext';
 import { colors, spacing, typography, borderRadius, shadows, getCurrencySymbol } from '../utils/theme';
-import { Transaction } from '../types';
+import BottomModal from './BottomModal';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
 
 interface AddTransactionModalProps {
   visible: boolean;
@@ -48,27 +37,6 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ visible, onCl
 
   // Quick amount buttons - more compact
   const quickAmounts = [10, 25, 50, 100, 200, 500];
-
-  // Animation values
-  const modalTranslateY = useSharedValue(screenHeight);
-  const backdropOpacity = useSharedValue(0);
-
-  useEffect(() => {
-    if (visible) {
-      modalTranslateY.value = withSpring(0, { damping: 20, stiffness: 300 });
-      backdropOpacity.value = withTiming(1, { duration: 300 });
-    } else {
-      modalTranslateY.value = withTiming(screenHeight, { duration: 300 });
-      backdropOpacity.value = withTiming(0, { duration: 300 });
-    }
-  }, [visible]);
-
-  const handleClose = () => {
-    modalTranslateY.value = withTiming(screenHeight, { duration: 300 });
-    backdropOpacity.value = withTiming(0, { duration: 300 }, () => {
-      runOnJS(onClose)();
-    });
-  };
 
   const handleSubmit = async () => {
     if (!amount || !description || !category) {
@@ -100,7 +68,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ visible, onCl
       setDate(new Date().toISOString().split('T')[0]);
 
       Alert.alert('Success', 'Transaction added successfully', [
-        { text: 'OK', onPress: handleClose }
+        { text: 'OK', onPress: onClose }
       ]);
     } catch (error) {
       Alert.alert('Error', 'Failed to add transaction');
@@ -118,435 +86,284 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ visible, onCl
     setAmount(amount.toString());
   };
 
-  const animatedModalStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: modalTranslateY.value }],
-  }));
-
-  const animatedBackdropStyle = useAnimatedStyle(() => ({
-    opacity: backdropOpacity.value,
-  }));
-
   return (
-    <Modal
+    <BottomModal
       visible={visible}
-      transparent
-      animationType="none"
-      statusBarTranslucent
-      onRequestClose={handleClose}
+      onClose={onClose}
+      title="Add Transaction"
+      showSaveButton={true}
+      onSave={handleSubmit}
+      saveButtonDisabled={!amount || !description || !category}
+      isLoading={loading}
     >
-      <Animated.View style={[styles.backdrop, animatedBackdropStyle]}>
-        <Pressable style={styles.backdropPressable} onPress={handleClose} />
-        
-        <Animated.View style={[styles.modalContainer, animatedModalStyle]}>
-          {/* Compact Header */}
-          <View style={styles.header}>
-            <View style={styles.handle} />
-            <View style={styles.headerContent}>
-              <TouchableOpacity style={styles.cancelButton} onPress={handleClose}>
-                <Text style={styles.cancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <Text style={styles.title}>Add Transaction</Text>
-              <View style={styles.headerActions}>
-                <TouchableOpacity 
-                  style={[styles.addButton, loading && styles.addButtonDisabled]}
-                  onPress={handleSubmit}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <Ionicons name="refresh" size={16} color={colors.white} />
-                  ) : (
-                    <Ionicons name="checkmark" size={16} color={colors.white} />
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-          <ScrollView 
-            style={styles.content}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
+      <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+        {/* Transaction Type Toggle */}
+        <View style={styles.typeToggle}>
+          <TouchableOpacity
+            style={[styles.typeButton, type === 'expense' && styles.typeButtonActive]}
+            onPress={() => setType('expense')}
           >
-            {/* Type Toggle - Compact */}
-            <Animated.View entering={SlideInUp.delay(100)} style={[styles.section, styles.firstSection]}>
-              <View style={styles.typeToggle}>
-                <TouchableOpacity
-                  style={[styles.typeBtn, type === 'expense' && styles.typeBtnActive]}
-                  onPress={() => {
-                    setType('expense');
-                    setCategory('');
-                  }}
-                >
-                  <Ionicons 
-                    name="remove-circle-outline" 
-                    size={16} 
-                    color={type === 'expense' ? colors.white : colors.error} 
-                  />
-                  <Text style={[styles.typeBtnText, type === 'expense' && styles.typeBtnTextActive]}>
-                    Expense
-                  </Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={[styles.typeBtn, type === 'income' && styles.typeBtnActive]}
-                  onPress={() => {
-                    setType('income');
-                    setCategory('');
-                  }}
-                >
-                  <Ionicons 
-                    name="add-circle-outline" 
-                    size={16} 
-                    color={type === 'income' ? colors.white : colors.success} 
-                  />
-                  <Text style={[styles.typeBtnText, type === 'income' && styles.typeBtnTextActive]}>
-                    Income
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </Animated.View>
+            <Ionicons 
+              name="remove-circle-outline" 
+              size={20} 
+              color={type === 'expense' ? colors.white : colors.textSecondary} 
+            />
+            <Text style={[styles.typeButtonText, type === 'expense' && styles.typeButtonTextActive]}>
+              Expense
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.typeButton, type === 'income' && styles.typeButtonActive]}
+            onPress={() => setType('income')}
+          >
+            <Ionicons 
+              name="add-circle-outline" 
+              size={20} 
+              color={type === 'income' ? colors.white : colors.textSecondary} 
+            />
+            <Text style={[styles.typeButtonText, type === 'income' && styles.typeButtonTextActive]}>
+              Income
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-            {/* Amount Input - Compact */}
-            <Animated.View entering={SlideInUp.delay(200)} style={styles.section}>
-              <View style={styles.amountContainer}>
-                <View style={styles.currencyContainer}>
-                  <Text style={styles.currencySymbol}>
-                    {getCurrencySymbol(data.settings.currency)}
-                  </Text>
-                </View>
-                <TextInput
-                  style={styles.amountInput}
-                  value={amount}
-                  onChangeText={(text) => setAmount(formatCurrency(text))}
-                  placeholder="0.00"
-                  keyboardType="numeric"
-                  placeholderTextColor={colors.textTertiary}
-                  selectionColor={colors.primary}
-                />
-              </View>
-              
-              {/* Quick Amounts - Compact Grid */}
-              <View style={styles.quickAmounts}>
-                {quickAmounts.map((quickAmount) => (
-                  <TouchableOpacity
-                    key={quickAmount}
-                    style={styles.quickAmountBtn}
-                    onPress={() => handleQuickAmount(quickAmount)}
-                  >
-                    <Text style={styles.quickAmountText}>
-                      {getCurrencySymbol(data.settings.currency)}{quickAmount}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </Animated.View>
-
-            {/* Description - Compact */}
-            <Animated.View entering={SlideInUp.delay(300)} style={styles.section}>
-              <View style={styles.inputContainer}>
-                <Ionicons name="document-text-outline" size={18} color={colors.primary} />
-                <TextInput
-                  style={styles.textInput}
-                  value={description}
-                  onChangeText={setDescription}
-                  placeholder="Description"
-                  placeholderTextColor={colors.textTertiary}
-                  selectionColor={colors.primary}
-                />
-              </View>
-            </Animated.View>
-
-            {/* Category - Compact */}
-            <Animated.View entering={SlideInUp.delay(400)} style={styles.section}>
+        {/* Amount Input */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Amount</Text>
+          <View style={styles.amountContainer}>
+            <Text style={styles.currencySymbol}>{getCurrencySymbol(data.settings.currency)}</Text>
+            <TextInput
+              style={styles.amountInput}
+              value={amount}
+              onChangeText={(text) => setAmount(formatCurrency(text))}
+              placeholder="0.00"
+              placeholderTextColor={colors.textSecondary}
+              keyboardType="numeric"
+              returnKeyType="next"
+            />
+          </View>
+          
+          {/* Quick Amount Buttons */}
+          <View style={styles.quickAmounts}>
+            {quickAmounts.map((quickAmount) => (
               <TouchableOpacity
-                style={styles.inputContainer}
-                onPress={() => setShowCategoryPicker(!showCategoryPicker)}
+                key={quickAmount}
+                style={styles.quickAmountButton}
+                onPress={() => handleQuickAmount(quickAmount)}
               >
-                <Ionicons name="pricetag-outline" size={18} color={colors.primary} />
-                <Text style={[styles.categoryText, !category && styles.placeholderText]}>
-                  {category || 'Select category'}
-                </Text>
-                <Ionicons 
-                  name={showCategoryPicker ? "chevron-up" : "chevron-down"} 
-                  size={18} 
-                  color={colors.primary} 
-                />
+                <Text style={styles.quickAmountText}>{quickAmount}</Text>
               </TouchableOpacity>
-              
-              {showCategoryPicker && (
-                <Animated.View entering={FadeIn} style={styles.categoryPicker}>
-                  {currentCategories.map((cat) => (
-                    <TouchableOpacity
-                      key={cat.id}
-                      style={[styles.categoryOption, category === cat.name && styles.categoryOptionSelected]}
-                      onPress={() => {
-                        setCategory(cat.name);
-                        setShowCategoryPicker(false);
-                      }}
-                    >
-                      <Ionicons 
-                        name="pricetag" 
-                        size={14} 
-                        color={category === cat.name ? colors.white : colors.primary} 
-                      />
-                      <Text style={[styles.categoryOptionText, category === cat.name && styles.categoryOptionTextSelected]}>
-                        {cat.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </Animated.View>
-              )}
-            </Animated.View>
+            ))}
+          </View>
+        </View>
 
-            {/* Date - Compact */}
-            <Animated.View entering={SlideInUp.delay(500)} style={styles.section}>
-              <View style={styles.inputContainer}>
-                <Ionicons name="calendar-outline" size={18} color={colors.primary} />
-                <TextInput
-                  style={styles.textInput}
-                  value={date}
-                  onChangeText={setDate}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={colors.textTertiary}
-                  selectionColor={colors.primary}
-                />
-              </View>
-            </Animated.View>
-          </ScrollView>
-        </Animated.View>
-      </Animated.View>
-    </Modal>
+        {/* Description Input */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Description</Text>
+          <TextInput
+            style={styles.textInput}
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Enter description"
+            placeholderTextColor={colors.textSecondary}
+            returnKeyType="next"
+          />
+        </View>
+
+        {/* Category Selection */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Category</Text>
+          <TouchableOpacity
+            style={styles.categoryButton}
+            onPress={() => setShowCategoryPicker(!showCategoryPicker)}
+          >
+            <Text style={[styles.categoryButtonText, !category && styles.categoryButtonPlaceholder]}>
+              {category || 'Select category'}
+            </Text>
+            <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          {/* Category Picker */}
+          {showCategoryPicker && (
+            <View style={styles.categoryPicker}>
+              {currentCategories.map((cat) => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[
+                    styles.categoryOption,
+                    category === cat.name && styles.categoryOptionSelected
+                  ]}
+                  onPress={() => {
+                    setCategory(cat.name);
+                    setShowCategoryPicker(false);
+                  }}
+                >
+                  <View style={[styles.categoryIcon, { backgroundColor: cat.color }]}>
+                    <Ionicons name={cat.icon as any} size={16} color={colors.white} />
+                  </View>
+                  <Text style={[
+                    styles.categoryOptionText,
+                    category === cat.name && styles.categoryOptionTextSelected
+                  ]}>
+                    {cat.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* Date Input */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Date</Text>
+          <TextInput
+            style={styles.textInput}
+            value={date}
+            onChangeText={setDate}
+            placeholder="YYYY-MM-DD"
+            placeholderTextColor={colors.textSecondary}
+            returnKeyType="done"
+          />
+        </View>
+      </ScrollView>
+    </BottomModal>
   );
 };
 
 const styles = StyleSheet.create({
-  // Modal Container
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    justifyContent: 'flex-end',
-  },
-  backdropPressable: {
+  scrollView: {
     flex: 1,
   },
-  modalContainer: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
-    maxHeight: screenHeight * 0.95,
-    minHeight: screenHeight * 0.9,
-    ...shadows.xl,
-  },
-
-  // Header
-  header: {
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-    paddingHorizontal: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    backgroundColor: colors.textTertiary,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: spacing.md,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  cancelButton: {
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  cancelText: {
-    ...typography.body,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  title: {
-    ...typography.h3,
-    color: colors.textPrimary,
-    fontWeight: '700',
-    fontSize: 18,
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  addButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...shadows.sm,
-  },
-  addButtonDisabled: {
-    opacity: 0.6,
-  },
-
-  // Content
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.sm,
-    paddingBottom: spacing.xl,
-  },
-  section: {
-    marginBottom: spacing.md,
-  },
-  firstSection: {
-    marginTop: spacing.sm,
-  },
-
-  // Type Toggle
   typeToggle: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: borderRadius.lg,
-    padding: 3,
-    ...shadows.sm,
+    padding: 4,
+    marginBottom: spacing.lg,
   },
-  typeBtn: {
+  typeButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
-    gap: spacing.xs,
   },
-  typeBtnActive: {
+  typeButtonActive: {
     backgroundColor: colors.primary,
-    ...shadows.sm,
   },
-  typeBtnText: {
-    ...typography.bodySmall,
+  typeButtonText: {
+    fontSize: typography.body.fontSize,
     fontWeight: '600',
     color: colors.textSecondary,
+    marginLeft: spacing.sm,
   },
-  typeBtnTextActive: {
+  typeButtonTextActive: {
     color: colors.white,
   },
-
-  // Amount Input
+  inputGroup: {
+    marginBottom: spacing.lg,
+  },
+  inputLabel: {
+    fontSize: typography.body.fontSize,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
   amountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    marginBottom: spacing.sm,
-    ...shadows.sm,
-  },
-  currencyContainer: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.md,
-    marginRight: spacing.md,
+    marginBottom: spacing.md,
   },
   currencySymbol: {
-    ...typography.bodySmall,
-    color: colors.white,
-    fontWeight: '700',
+    fontSize: typography.h3.fontSize,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginRight: spacing.sm,
   },
   amountInput: {
     flex: 1,
-    ...typography.h3,
+    fontSize: typography.h3.fontSize,
+    fontWeight: '600',
     color: colors.textPrimary,
-    fontWeight: '700',
-    fontSize: 20,
-    textAlign: 'right',
   },
   quickAmounts: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
-  quickAmountBtn: {
-    backgroundColor: colors.surfaceSecondary,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+  quickAmountButton: {
+    backgroundColor: colors.backgroundSecondary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
-    ...shadows.sm,
   },
   quickAmountText: {
-    ...typography.caption,
-    color: colors.primary,
-    fontWeight: '600',
+    fontSize: typography.body.fontSize,
+    fontWeight: '500',
+    color: colors.textPrimary,
   },
-
-  // Input Container (shared for description, category, date)
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
+  textInput: {
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    gap: spacing.sm,
-    ...shadows.sm,
-  },
-  textInput: {
-    flex: 1,
-    ...typography.body,
+    fontSize: typography.body.fontSize,
     color: colors.textPrimary,
-    fontWeight: '500',
   },
-  categoryText: {
-    flex: 1,
-    ...typography.body,
+  categoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  categoryButtonText: {
+    fontSize: typography.body.fontSize,
     color: colors.textPrimary,
-    fontWeight: '500',
   },
-  placeholderText: {
-    color: colors.textTertiary,
+  categoryButtonPlaceholder: {
+    color: colors.textSecondary,
   },
-
-  // Category Picker
   categoryPicker: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: borderRadius.lg,
     marginTop: spacing.sm,
     padding: spacing.sm,
-    ...shadows.md,
   },
   categoryOption: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
-    gap: spacing.sm,
   },
   categoryOptionSelected: {
-    backgroundColor: colors.primary,
-    ...shadows.sm,
+    backgroundColor: colors.primary + '20',
+  },
+  categoryIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
   },
   categoryOptionText: {
-    ...typography.bodySmall,
+    fontSize: typography.body.fontSize,
     color: colors.textPrimary,
-    fontWeight: '500',
+    flex: 1,
   },
   categoryOptionTextSelected: {
-    color: colors.white,
+    color: colors.primary,
     fontWeight: '600',
   },
-
 });
 
 export default AddTransactionModal;

@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import * as DocumentPicker from 'expo-document-picker';
 import Animated, { 
   FadeInDown, 
   SlideInLeft, 
@@ -36,40 +37,29 @@ import Animated, {
 import { useApp } from '../contexts/AppContext';
 import { colors, spacing, typography, borderRadius, shadows, getCurrencySymbol } from '../utils/theme';
 import StorageService from '../services/StorageService';
+import BottomModal from '../components/BottomModal';
 
 const { height: screenHeight } = Dimensions.get('window');
 
 const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
-  const { data, updateSettings, exportToJSON, exportToCSV } = useApp();
+  const { data, updateSettings, exportToJSON, exportToCSV, refreshData } = useApp();
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [isUpdatingCurrency, setIsUpdatingCurrency] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('');
 
-  // Animation values for bottom modal
-  const modalTranslateY = useSharedValue(screenHeight);
-  const backdropOpacity = useSharedValue(0);
-
   useEffect(() => {
     if (showCurrencyPicker) {
       setSelectedCurrency(data.settings.currency);
-      modalTranslateY.value = withSpring(0, { damping: 20, stiffness: 300 });
-      backdropOpacity.value = withTiming(1, { duration: 300 });
-    } else {
-      modalTranslateY.value = withTiming(screenHeight, { duration: 300 });
-      backdropOpacity.value = withTiming(0, { duration: 300 });
     }
   }, [showCurrencyPicker]);
 
 
   const handleCloseModal = () => {
-    modalTranslateY.value = withTiming(screenHeight, { duration: 300 });
-    backdropOpacity.value = withTiming(0, { duration: 300 }, () => {
-      runOnJS(setShowCurrencyPicker)(false);
-      runOnJS(setSearchQuery)('');
-      runOnJS(setSelectedCurrency)('');
-    });
+    setShowCurrencyPicker(false);
+    setSearchQuery('');
+    setSelectedCurrency('');
   };
 
   const currencyOptions = [
@@ -141,7 +131,7 @@ const SettingsScreen: React.FC = () => {
     }
   };
 
-  const handleImportData = () => {
+  const handleImportData = async () => {
     Alert.alert(
       'Import Data',
       'This will restore data from a backup file. Current data will be merged with imported data.',
@@ -149,14 +139,60 @@ const SettingsScreen: React.FC = () => {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Import',
-          onPress: () => {
-            // In a real app, you'd use a file picker here
-            // For now, we'll show a placeholder
-            Alert.alert(
-              'Import Data',
-              'File picker would open here. In a real app, you would:\n\n1. Select a JSON backup file\n2. Validate the file format\n3. Import and merge the data\n4. Show import results\n\nThis feature requires react-native-document-picker or similar library.',
-              [{ text: 'OK' }]
-            );
+          onPress: async () => {
+            try {
+              // Pick a JSON file
+              const result = await DocumentPicker.getDocumentAsync({
+                type: ['application/json', 'text/json'],
+                copyToCacheDirectory: true,
+              });
+
+              if (!result.canceled && result.assets && result.assets.length > 0) {
+                const file = result.assets[0];
+                
+                // Read the file content
+                const response = await fetch(file.uri);
+                const fileContent = await response.text();
+                
+                // Parse and validate JSON
+                let importedData;
+                try {
+                  importedData = JSON.parse(fileContent);
+                } catch (parseError) {
+                  Alert.alert('Error', 'Invalid JSON file format');
+                  return;
+                }
+
+                // Validate the data structure
+                if (!importedData || typeof importedData !== 'object') {
+                  Alert.alert('Error', 'Invalid data format');
+                  return;
+                }
+
+                // Merge with existing data
+                const currentData = await StorageService.getData();
+                const mergedData = {
+                  ...currentData,
+                  ...importedData,
+                  // Preserve current settings and setup status
+                  settings: currentData.settings,
+                  isSetupComplete: currentData.isSetupComplete,
+                };
+
+                // Save merged data
+                await StorageService.saveData(mergedData);
+                await refreshData();
+
+                Alert.alert(
+                  'Success',
+                  'Data imported successfully! The app will refresh to show your imported data.',
+                  [{ text: 'OK' }]
+                );
+              }
+            } catch (error) {
+              console.error('Import error:', error);
+              Alert.alert('Error', 'Failed to import data. Please check the file format and try again.');
+            }
           },
         },
       ]
@@ -259,14 +295,6 @@ const SettingsScreen: React.FC = () => {
     return csv;
   };
 
-  // Animated styles
-  const animatedModalStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: modalTranslateY.value }],
-  }));
-
-  const animatedBackdropStyle = useAnimatedStyle(() => ({
-    opacity: backdropOpacity.value,
-  }));
 
   const SettingItem: React.FC<{
     icon: string;
@@ -452,41 +480,16 @@ const SettingsScreen: React.FC = () => {
       </View>
 
       {/* Currency Picker Modal */}
-      <Modal
+      <BottomModal
         visible={showCurrencyPicker}
-        transparent
-        animationType="none"
-        statusBarTranslucent
-        onRequestClose={handleCloseModal}
+        onClose={handleCloseModal}
+        title="Select Currency"
+        showSaveButton={true}
+        onSave={handleSaveCurrency}
+        saveButtonDisabled={isUpdatingCurrency}
+        isLoading={isUpdatingCurrency}
       >
-        <Animated.View style={[styles.backdrop, animatedBackdropStyle]}>
-          <Pressable style={styles.backdropPressable} onPress={handleCloseModal} />
-          
-          <Animated.View style={[styles.modalContainer, animatedModalStyle]}>
-            {/* Header with handle */}
-            <View style={styles.header}>
-              <View style={styles.handle} />
-              <View style={styles.headerContent}>
-                <TouchableOpacity style={styles.cancelButton} onPress={handleCloseModal}>
-                  <Text style={styles.cancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <Text style={styles.title}>Select Currency</Text>
-                <View style={styles.headerActions}>
-                  {isUpdatingCurrency ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
-                  ) : (
-                    <TouchableOpacity 
-                      style={styles.saveButton}
-                      onPress={handleSaveCurrency}
-                    >
-                      <Ionicons name="checkmark" size={20} color={colors.white} />
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
-            </View>
-
-            {/* Search Input */}
+        {/* Search Input */}
             <View style={styles.searchContainer}>
               <View style={styles.searchInputContainer}>
                 <Ionicons name="search-outline" size={18} color={colors.textSecondary} />
@@ -576,9 +579,7 @@ const SettingsScreen: React.FC = () => {
                 </ScrollView>
               )}
             </View>
-          </Animated.View>
-        </Animated.View>
-      </Modal>
+      </BottomModal>
       </ScrollView>
     </View>
   );

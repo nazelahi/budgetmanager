@@ -265,7 +265,7 @@ const ModernHeader = ({ title, showBackButton = false, onBackPress, isDashboard 
               <View style={styles.profileImage}>
                 <Ionicons name="wallet" size={20} color={colors.white} />
               </View>
-              <Text style={styles.userName}>BUDGET MANAGER</Text>
+              <Text style={styles.userName}>MONEY PRO</Text>
             </View>
           ) : (
             <View style={styles.screenTitleContainer}>

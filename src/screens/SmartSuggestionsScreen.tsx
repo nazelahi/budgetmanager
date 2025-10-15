@@ -159,8 +159,14 @@ const SmartSuggestionsScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[styles.actionButton, { backgroundColor: suggestionColor + '20' }]}
                   onPress={() => {
-                    // Navigate to budget screen or implement action
-                    Alert.alert('Action', 'This would take you to the budget management screen');
+                    // Navigate to budget screen based on suggestion type
+                    if (suggestion.type === 'reduce_spending' || suggestion.type === 'increase_budget') {
+                      (navigation as any).navigate('Budget');
+                    } else if (suggestion.type === 'reallocate_funds') {
+                      (navigation as any).navigate('Categories');
+                    } else {
+                      (navigation as any).navigate('Dashboard');
+                    }
                   }}
                 >
                   <Ionicons name="arrow-forward" size={16} color={suggestionColor} />

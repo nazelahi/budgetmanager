@@ -27,6 +27,7 @@ import Animated, {
 import { useApp } from '../contexts/AppContext';
 import { colors, spacing, typography, borderRadius, shadows, gradients } from '../utils/theme';
 import { Category } from '../types';
+import BottomModal from '../components/BottomModal';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -46,25 +47,8 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({ visible, onClose,
   const [loading, setLoading] = useState(false);
   const [showIconPicker, setShowIconPicker] = useState(false);
 
-  // Animation values
-  const modalTranslateY = useSharedValue(screenHeight);
-  const backdropOpacity = useSharedValue(0);
-
-  useEffect(() => {
-    if (visible) {
-      modalTranslateY.value = withSpring(0, { damping: 20, stiffness: 300 });
-      backdropOpacity.value = withTiming(1, { duration: 300 });
-    } else {
-      modalTranslateY.value = withTiming(screenHeight, { duration: 300 });
-      backdropOpacity.value = withTiming(0, { duration: 300 });
-    }
-  }, [visible]);
-
   const handleClose = () => {
-    modalTranslateY.value = withTiming(screenHeight, { duration: 300 });
-    backdropOpacity.value = withTiming(0, { duration: 300 }, () => {
-      runOnJS(onClose)();
-    });
+    onClose();
   };
 
   const availableIcons = [
@@ -132,51 +116,24 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({ visible, onClose,
     );
   };
 
-  const animatedModalStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: modalTranslateY.value }],
-  }));
-
-  const animatedBackdropStyle = useAnimatedStyle(() => ({
-    opacity: backdropOpacity.value,
-  }));
 
   return (
-    <Modal
+    <>
+    <BottomModal
       visible={visible}
-      transparent
-      animationType="none"
-      statusBarTranslucent
-      onRequestClose={handleClose}
+      onClose={handleClose}
+      title="Edit Category"
+      showSaveButton={true}
+      onSave={handleSave}
+      saveButtonDisabled={!name.trim() || loading}
+      isLoading={loading}
     >
-      <Animated.View style={[styles.backdrop, animatedBackdropStyle]}>
-        <Pressable style={styles.backdropPressable} onPress={handleClose} />
-        
-        <Animated.View style={[styles.modalContainer, animatedModalStyle]}>
-          {/* Compact Header */}
-          <View style={styles.header}>
-            <View style={styles.handle} />
-            <View style={styles.headerContent}>
-              <Text style={styles.title}>Edit Category</Text>
-              <View style={styles.headerActions}>
-                <TouchableOpacity 
-                  style={styles.deleteButton}
-                  onPress={handleDelete}
-                >
-                  <Ionicons name="trash-outline" size={20} color={colors.error} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.closeBtn} onPress={handleClose}>
-                  <Ionicons name="close" size={20} color={colors.textSecondary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-          <ScrollView 
-            style={styles.content}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
+      <ScrollView 
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
             {/* Type Toggle - Compact */}
             <Animated.View entering={SlideInUp.delay(100)} style={styles.section}>
               <View style={styles.typeToggle}>
@@ -261,8 +218,6 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({ visible, onClose,
               </TouchableOpacity>
             </Animated.View>
 
-          </ScrollView>
-          
           {/* Fixed Submit Button */}
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -295,8 +250,8 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({ visible, onClose,
               </TouchableOpacity>
             </Animated.View>
           </KeyboardAvoidingView>
-        </Animated.View>
-      </Animated.View>
+        </ScrollView>
+      </BottomModal>
 
       {/* Icon Picker Modal */}
       <Modal
@@ -348,7 +303,7 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({ visible, onClose,
           </View>
         </View>
       </Modal>
-    </Modal>
+    </>
   );
 };
 

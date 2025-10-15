@@ -32,6 +32,7 @@ import { colors, spacing, typography, borderRadius, shadows, formatCurrencyAmoun
 import { Transaction } from '../types';
 import { getCategoryDetails } from '../utils/categoryUtils';
 import EditTransactionModal from './EditTransactionScreen';
+import SimpleAnimatedWrapper from '../components/SimpleAnimatedWrapper';
 
 const TransactionsScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -326,10 +327,14 @@ const TransactionsScreen: React.FC = () => {
         {/* Transactions List */}
         {filteredTransactions.length > 0 ? (
           <View style={styles.transactionsContainer}>
-            {filteredTransactions.map((item) => (
-              <View key={item.id}>
+            {filteredTransactions.map((item, index) => (
+              <SimpleAnimatedWrapper 
+                key={item.id} 
+                delay={index * 50} 
+                direction="up"
+              >
                 {renderTransaction({ item })}
-              </View>
+              </SimpleAnimatedWrapper>
             ))}
           </View>
         ) : (

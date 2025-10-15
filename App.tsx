@@ -51,7 +51,6 @@ const MainApp: React.FC = () => {
   }
 
   if (!isSetupComplete && !setupCompleted) {
-    console.log('📱 Rendering SetupScreen - isSetupComplete:', isSetupComplete, 'setupCompleted:', setupCompleted);
     return (
       <ErrorBoundary>
         <SafeAreaProvider>
@@ -68,7 +67,6 @@ const MainApp: React.FC = () => {
     );
   }
 
-  console.log('📱 Rendering AppNavigator - isSetupComplete:', isSetupComplete, 'setupCompleted:', setupCompleted);
   return (
     <ErrorBoundary>
       <SafeAreaProvider>

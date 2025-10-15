@@ -33,6 +33,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useApp } from '../contexts/AppContext';
 import { colors, spacing, typography, borderRadius, shadows, formatCurrencyAmount, getCurrencySymbol } from '../utils/theme';
 import { AnimatedCard } from '../components/AnimatedComponents';
+import BottomModal from '../components/BottomModal';
 import { Budget, BudgetStats, Category } from '../types';
 import StorageService from '../services/StorageService';
 import BudgetService from '../services/BudgetService';
@@ -62,22 +63,9 @@ const BudgetScreen: React.FC = () => {
   });
 
   // Animation values
-  const modalTranslateY = useSharedValue(300);
-  const backdropOpacity = useSharedValue(0);
-
   useEffect(() => {
     loadBudgetData();
   }, [selectedPeriod]);
-
-  useEffect(() => {
-    if (showAddModal || showEditModal) {
-      modalTranslateY.value = withSpring(0, { damping: 20, stiffness: 300 });
-      backdropOpacity.value = withTiming(1, { duration: 300 });
-    } else {
-      modalTranslateY.value = withTiming(300, { duration: 300 });
-      backdropOpacity.value = withTiming(0, { duration: 300 });
-    }
-  }, [showAddModal, showEditModal]);
 
   const loadBudgetData = async () => {
     try {
@@ -89,9 +77,6 @@ const BudgetScreen: React.FC = () => {
       
       setBudgets(budgetsData.filter(b => b.period === selectedPeriod));
       setBudgetStats(stats);
-      
-      // Check for budget alerts
-      await BudgetService.checkBudgetAlerts();
     } catch (error) {
       console.error('Error loading budget data:', error);
     } finally {
@@ -144,6 +129,7 @@ const BudgetScreen: React.FC = () => {
         categoryName: category.name,
         amount,
         period: formData.period,
+        startDate: new Date().toISOString().split('T')[0],
         isActive: formData.isActive,
       };
 
@@ -204,13 +190,6 @@ const BudgetScreen: React.FC = () => {
     return colors.success || '#4CAF50';
   };
 
-  const animatedModalStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: modalTranslateY.value }],
-  }));
-
-  const animatedBackdropStyle = useAnimatedStyle(() => ({
-    opacity: backdropOpacity.value,
-  }));
 
   const expenseCategories = data?.categories.filter(c => c.type === 'expense') || [];
 
@@ -235,7 +214,7 @@ const BudgetScreen: React.FC = () => {
           colors={['#1B263B', '#0D1B2A']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={[styles.headerGradient, { paddingTop: insets.top + spacing.xs }]}
+          style={styles.headerGradient}
         >
           <Animated.View entering={SlideInLeft.delay(200)} style={styles.headerTitleContainer}>
             <Ionicons name="wallet" size={18} color={colors.white} style={styles.headerIcon} />
@@ -446,44 +425,21 @@ const BudgetScreen: React.FC = () => {
       </ScrollView>
 
       {/* Add/Edit Budget Modal */}
-      <Modal
+      <BottomModal
         visible={showAddModal || showEditModal}
-        transparent
-        animationType="none"
-        statusBarTranslucent
-        onRequestClose={handleCloseModal}
+        onClose={handleCloseModal}
+        title={showEditModal ? 'Edit Budget' : 'Add Budget'}
+        showSaveButton={true}
+        onSave={handleSaveBudget}
+        saveButtonDisabled={!formData.categoryId || !formData.amount}
+        isLoading={loading}
       >
-        <Animated.View style={[styles.modalBackdrop, animatedBackdropStyle]}>
-          <Pressable style={styles.modalBackdropPressable} onPress={handleCloseModal} />
-          
-          <Animated.View style={[styles.modalContainer, animatedModalStyle]}>
-            {/* Header with handle */}
-            <View style={styles.modalHeader}>
-              <View style={styles.handle} />
-              <View style={styles.headerContent}>
-                <TouchableOpacity style={styles.cancelButton} onPress={handleCloseModal}>
-                  <Text style={styles.cancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <Text style={styles.modalTitle}>
-                  {showEditModal ? 'Edit Budget' : 'Add Budget'}
-                </Text>
-                <View style={styles.headerActions}>
-                  <TouchableOpacity 
-                    style={styles.saveButton}
-                    onPress={handleSaveBudget}
-                  >
-                    <Ionicons name="checkmark" size={16} color={colors.white} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-
-            <ScrollView 
-              style={styles.modalContent}
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-            >
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
               {/* Category Selection */}
               <Animated.View entering={SlideInUp.delay(100)} style={[styles.section, styles.firstSection]}>
                 <TouchableOpacity
@@ -638,10 +594,8 @@ const BudgetScreen: React.FC = () => {
                   />
                 </View>
               </Animated.View>
-            </ScrollView>
-          </Animated.View>
-        </Animated.View>
-      </Modal>
+        </ScrollView>
+      </BottomModal>
     </View>
   );
 };
@@ -660,6 +614,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
+    paddingTop: Platform.OS === 'ios' ? 44 + spacing.xs : 24 + spacing.xs,
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.1)',
@@ -679,6 +634,7 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.sm,
   },
   headerActionContainer: {
     position: 'relative',
@@ -702,10 +658,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.sm,
-    paddingBottom: 100,
   },
   periodToggle: {
     flexDirection: 'row',
@@ -964,11 +916,6 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
   },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
   saveButton: {
     width: 32,
     height: 32,
@@ -978,12 +925,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...shadows.sm,
   },
-  modalContent: {
-    flex: 1,
-  },
   scrollContent: {
     paddingHorizontal: spacing.sm,
     paddingBottom: spacing.xl,
+  },
+  modalContent: {
+    flex: 1,
   },
   section: {
     marginBottom: spacing.md,
@@ -1101,13 +1048,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 20,
     textAlign: 'right',
-  },
-  periodToggle: {
-    flexDirection: 'row',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: 3,
-    ...shadows.sm,
   },
   periodBtn: {
     flex: 1,

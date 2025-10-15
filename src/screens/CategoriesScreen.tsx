@@ -30,6 +30,7 @@ import Animated, {
 import { useApp } from '../contexts/AppContext';
 import { colors, spacing, typography, borderRadius, shadows } from '../utils/theme';
 import { Category } from '../types';
+import SimpleAnimatedWrapper from '../components/SimpleAnimatedWrapper';
 
 const CategoriesScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -168,10 +169,7 @@ const CategoriesScreen: React.FC = () => {
   };
 
   const renderCategory = ({ item, index }: { item: Category; index: number }) => (
-    <Animated.View 
-      entering={FadeInUp.delay(500 + (index * 100))}
-      style={styles.categoryItem}
-    >
+    <View style={styles.categoryItem}>
       <View style={styles.categoryLeft}>
         <View style={[styles.categoryIcon, { backgroundColor: item.color }]}>
           <Ionicons name={item.icon as any} size={20} color={colors.white} />
@@ -197,7 +195,7 @@ const CategoriesScreen: React.FC = () => {
           <Ionicons name="trash-outline" size={16} color={colors.error} />
         </TouchableOpacity>
       </View>
-    </Animated.View>
+    </View>
   );
 
   const renderEmptyState = () => (
@@ -256,9 +254,13 @@ const CategoriesScreen: React.FC = () => {
         {data.categories.length > 0 ? (
           <View style={styles.categoriesContainer}>
             {data.categories.map((item, index) => (
-              <View key={item.id}>
+              <SimpleAnimatedWrapper 
+                key={item.id} 
+                delay={index * 100} 
+                direction="up"
+              >
                 {renderCategory({ item, index })}
-              </View>
+              </SimpleAnimatedWrapper>
             ))}
           </View>
         ) : (
