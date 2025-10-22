@@ -1,37 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   RefreshControl,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { 
-  FadeInDown, 
-  SlideInLeft, 
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, {
+  FadeInDown,
+  SlideInLeft,
   SlideInRight,
   FadeIn,
-} from 'react-native-reanimated';
-import { useApp } from '../contexts/AppContext';
-import { colors, spacing, typography, borderRadius, shadows, formatCurrencyAmount } from '../utils/theme';
-import { AlertHistory } from '../types';
-import BudgetService from '../services/BudgetService';
+} from "react-native-reanimated";
+import { useApp } from "../contexts/AppContext";
+import {
+  colors,
+  spacing,
+  typography,
+  borderRadius,
+  shadows,
+  formatCurrencyAmount,
+} from "../utils/theme";
+import { AlertHistory } from "../types";
+import BudgetService from "../services/BudgetService";
+import ToastService from "../services/ToastService";
 
 const AlertHistoryScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { data, refreshData } = useApp();
-  
+
   const [alertHistory, setAlertHistory] = useState<AlertHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState<'7' | '30' | '90'>('30');
+  const [selectedPeriod, setSelectedPeriod] = useState<"7" | "30" | "90">("30");
 
   useEffect(() => {
     loadAlertHistory();
@@ -40,11 +47,13 @@ const AlertHistoryScreen: React.FC = () => {
   const loadAlertHistory = async () => {
     try {
       setLoading(true);
-      const history = await BudgetService.getAlertHistory(parseInt(selectedPeriod));
+      const history = await BudgetService.getAlertHistory(
+        parseInt(selectedPeriod),
+      );
       setAlertHistory(history);
     } catch (error) {
-      console.error('Error loading alert history:', error);
-      Alert.alert('Error', 'Failed to load alert history');
+      console.error("Error loading alert history:", error);
+      ToastService.error("Error", "Failed to load alert history");
     } finally {
       setLoading(false);
     }
@@ -58,25 +67,25 @@ const AlertHistoryScreen: React.FC = () => {
 
   const getAlertIcon = (type: string) => {
     switch (type) {
-      case 'warning':
-        return 'warning';
-      case 'exceeded':
-        return 'alert-circle';
-      case 'achieved':
-        return 'checkmark-circle';
+      case "warning":
+        return "warning";
+      case "exceeded":
+        return "alert-circle";
+      case "achieved":
+        return "checkmark-circle";
       default:
-        return 'information-circle';
+        return "information-circle";
     }
   };
 
   const getAlertColor = (type: string) => {
     switch (type) {
-      case 'warning':
-        return colors.warning || '#FFA500';
-      case 'exceeded':
+      case "warning":
+        return colors.warning || "#FFA500";
+      case "exceeded":
         return colors.error;
-      case 'achieved':
-        return colors.success || '#4CAF50';
+      case "achieved":
+        return colors.success || "#4CAF50";
       default:
         return colors.primary;
     }
@@ -84,37 +93,39 @@ const AlertHistoryScreen: React.FC = () => {
 
   const getAlertTitle = (type: string) => {
     switch (type) {
-      case 'warning':
-        return 'Budget Warning';
-      case 'exceeded':
-        return 'Budget Exceeded';
-      case 'achieved':
-        return 'Budget Achievement';
+      case "warning":
+        return "Budget Warning";
+      case "exceeded":
+        return "Budget Exceeded";
+      case "achieved":
+        return "Budget Achievement";
       default:
-        return 'Budget Alert';
+        return "Budget Alert";
     }
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
+    );
+
     if (diffInHours < 1) {
-      return 'Just now';
+      return "Just now";
     } else if (diffInHours < 24) {
       return `${diffInHours}h ago`;
     } else if (diffInHours < 48) {
-      return 'Yesterday';
+      return "Yesterday";
     } else {
       return date.toLocaleDateString();
     }
   };
 
   const periodOptions = [
-    { value: '7', label: '7 Days' },
-    { value: '30', label: '30 Days' },
-    { value: '90', label: '90 Days' },
+    { value: "7", label: "7 Days" },
+    { value: "30", label: "30 Days" },
+    { value: "90", label: "90 Days" },
   ];
 
   const renderAlertItem = (alert: AlertHistory, index: number) => {
@@ -130,17 +141,18 @@ const AlertHistoryScreen: React.FC = () => {
       >
         <View style={styles.alertContent}>
           <View style={styles.alertLeft}>
-            <View style={[styles.alertIcon, { backgroundColor: alertColor + '20' }]}>
+            <View
+              style={[styles.alertIcon, { backgroundColor: alertColor + "20" }]}
+            >
               <Ionicons name={alertIcon as any} size={20} color={alertColor} />
             </View>
             <View style={styles.alertInfo}>
               <Text style={styles.alertTitle}>{alertTitle}</Text>
               <Text style={styles.alertCategory}>{alert.categoryName}</Text>
               <Text style={styles.alertDetails}>
-                {alert.type === 'exceeded' 
+                {alert.type === "exceeded"
                   ? `Exceeded by ${formatCurrencyAmount(alert.amount - alert.budgetAmount, data.settings.currency)}`
-                  : `At ${alert.percentageUsed.toFixed(0)}% of budget`
-                }
+                  : `At ${alert.percentageUsed.toFixed(0)}% of budget`}
               </Text>
             </View>
           </View>
@@ -168,16 +180,27 @@ const AlertHistoryScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#1B263B', '#0D1B2A']}
+        colors={["#1B263B", "#0D1B2A"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={[styles.headerGradient, { paddingTop: insets.top + spacing.xs }]}
       >
-        <Animated.View entering={SlideInLeft.delay(200)} style={styles.headerTitleContainer}>
-          <Ionicons name="time" size={18} color={colors.white} style={styles.headerIcon} />
+        <Animated.View
+          entering={SlideInLeft.delay(200)}
+          style={styles.headerTitleContainer}
+        >
+          <Ionicons
+            name="time"
+            size={18}
+            color={colors.white}
+            style={styles.headerIcon}
+          />
           <Text style={styles.headerTitle}>Alert History</Text>
         </Animated.View>
-        <Animated.View entering={SlideInRight.delay(300)} style={styles.headerActionContainer}>
+        <Animated.View
+          entering={SlideInRight.delay(300)}
+          style={styles.headerActionContainer}
+        >
           <TouchableOpacity
             style={styles.headerButton}
             onPress={() => navigation.goBack()}
@@ -188,20 +211,26 @@ const AlertHistoryScreen: React.FC = () => {
       </LinearGradient>
 
       {/* Period Selector */}
-      <Animated.View entering={FadeInDown.delay(200)} style={styles.periodSelector}>
+      <Animated.View
+        entering={FadeInDown.delay(200)}
+        style={styles.periodSelector}
+      >
         {periodOptions.map((option) => (
           <TouchableOpacity
             key={option.value}
             style={[
               styles.periodButton,
-              selectedPeriod === option.value && styles.periodButtonActive
+              selectedPeriod === option.value && styles.periodButtonActive,
             ]}
             onPress={() => setSelectedPeriod(option.value as any)}
           >
-            <Text style={[
-              styles.periodButtonText,
-              selectedPeriod === option.value && styles.periodButtonTextActive
-            ]}>
+            <Text
+              style={[
+                styles.periodButtonText,
+                selectedPeriod === option.value &&
+                  styles.periodButtonTextActive,
+              ]}
+            >
               {option.label}
             </Text>
           </TouchableOpacity>
@@ -240,17 +269,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   headerGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: "rgba(255, 255, 255, 0.1)",
   },
   headerTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   headerIcon: {
@@ -259,21 +288,21 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.h4,
     color: colors.white,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   headerActionContainer: {
-    position: 'relative',
+    position: "relative",
   },
   headerButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   periodSelector: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     backgroundColor: colors.surface,
@@ -286,7 +315,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     marginHorizontal: spacing.xs,
     borderRadius: borderRadius.md,
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: colors.backgroundSecondary,
   },
   periodButtonActive: {
@@ -295,7 +324,7 @@ const styles = StyleSheet.create({
   periodButtonText: {
     ...typography.body,
     color: colors.textSecondary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   periodButtonTextActive: {
     color: colors.white,
@@ -310,8 +339,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: spacing.xxl,
   },
   loadingText: {
@@ -326,21 +355,21 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   alertContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: spacing.md,
   },
   alertLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   alertIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: spacing.md,
   },
   alertInfo: {
@@ -349,7 +378,7 @@ const styles = StyleSheet.create({
   alertTitle: {
     ...typography.body,
     color: colors.textPrimary,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: spacing.xs,
   },
   alertCategory: {
@@ -362,7 +391,7 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
   alertRight: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   alertTime: {
     ...typography.caption,
@@ -372,12 +401,12 @@ const styles = StyleSheet.create({
   alertAmount: {
     ...typography.body,
     color: colors.textPrimary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   emptyState: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: spacing.xxl,
   },
   emptyTitle: {
@@ -389,7 +418,7 @@ const styles = StyleSheet.create({
   emptyDescription: {
     ...typography.body,
     color: colors.textTertiary,
-    textAlign: 'center',
+    textAlign: "center",
     paddingHorizontal: spacing.lg,
   },
 });

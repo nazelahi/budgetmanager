@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,15 +6,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Dimensions,
   Modal,
   Pressable,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -23,13 +22,22 @@ import Animated, {
   runOnJS,
   FadeIn,
   SlideInUp,
-} from 'react-native-reanimated';
-import { useApp } from '../contexts/AppContext';
-import { colors, spacing, typography, borderRadius, shadows, gradients, getCurrencySymbol } from '../utils/theme';
-import { Transaction } from '../types';
-import BottomModal from '../components/BottomModal';
+} from "react-native-reanimated";
+import { useApp } from "../contexts/AppContext";
+import {
+  colors,
+  spacing,
+  typography,
+  borderRadius,
+  shadows,
+  gradients,
+  getCurrencySymbol,
+} from "../utils/theme";
+import { Transaction } from "../types";
+import BottomModal from "../components/BottomModal";
+import ToastService from "../services/ToastService";
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 interface EditTransactionModalProps {
   visible: boolean;
@@ -37,20 +45,25 @@ interface EditTransactionModalProps {
   transaction: Transaction;
 }
 
-const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ visible, onClose, transaction }) => {
+const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
+  visible,
+  onClose,
+  transaction,
+}) => {
   const { data, updateTransaction } = useApp();
-  
+
   const [amount, setAmount] = useState(transaction.amount.toString());
   const [description, setDescription] = useState(transaction.description);
   const [category, setCategory] = useState(transaction.category);
-  const [type, setType] = useState<'income' | 'expense'>(transaction.type);
+  const [type, setType] = useState<"income" | "expense">(transaction.type);
   const [date, setDate] = useState(transaction.date);
   const [loading, setLoading] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
-  const incomeCategories = data.categories.filter(c => c.type === 'income');
-  const expenseCategories = data.categories.filter(c => c.type === 'expense');
-  const currentCategories = type === 'income' ? incomeCategories : expenseCategories;
+  const incomeCategories = data.categories.filter((c) => c.type === "income");
+  const expenseCategories = data.categories.filter((c) => c.type === "expense");
+  const currentCategories =
+    type === "income" ? incomeCategories : expenseCategories;
 
   // Quick amount buttons - more compact
   const quickAmounts = [10, 25, 50, 100, 200, 500];
@@ -61,13 +74,13 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ visible, on
 
   const handleSave = async () => {
     if (!amount || !description || !category) {
-      Alert.alert('Error', 'Please fill in all fields');
+      ToastService.error("Error", "Please fill in all fields");
       return;
     }
 
     const amountNum = parseFloat(amount);
     if (isNaN(amountNum) || amountNum <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount');
+      ToastService.error("Error", "Please enter a valid amount");
       return;
     }
 
@@ -81,25 +94,23 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ visible, on
         date,
       });
 
-      Alert.alert('Success', 'Transaction updated successfully', [
-        { text: 'OK', onPress: handleClose }
-      ]);
+      ToastService.success("Success", "Transaction updated successfully");
+      handleClose();
     } catch (error) {
-      Alert.alert('Error', 'Failed to update transaction');
+      ToastService.error("Error", "Failed to update transaction");
     } finally {
       setLoading(false);
     }
   };
 
   const formatCurrency = (value: string) => {
-    const numericValue = value.replace(/[^0-9.]/g, '');
+    const numericValue = value.replace(/[^0-9.]/g, "");
     return numericValue;
   };
 
   const handleQuickAmount = (amount: number) => {
     setAmount(amount.toString());
   };
-
 
   return (
     <BottomModal
@@ -111,192 +122,237 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({ visible, on
       saveButtonDisabled={!amount || !description || !category || loading}
       isLoading={loading}
     >
-
-          <ScrollView 
-            style={styles.content}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* Type Toggle - Compact */}
-            <Animated.View entering={SlideInUp.delay(100)} style={styles.section}>
-              <View style={styles.typeToggle}>
-                <TouchableOpacity
-                  style={[styles.typeBtn, type === 'expense' && styles.typeBtnActive]}
-                  onPress={() => {
-                    setType('expense');
-                    setCategory('');
-                  }}
-                >
-                  <Ionicons 
-                    name="remove-circle-outline" 
-                    size={16} 
-                    color={type === 'expense' ? colors.white : colors.error} 
-                  />
-                  <Text style={[styles.typeBtnText, type === 'expense' && styles.typeBtnTextActive]}>
-                    Expense
-                  </Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={[styles.typeBtn, type === 'income' && styles.typeBtnActive]}
-                  onPress={() => {
-                    setType('income');
-                    setCategory('');
-                  }}
-                >
-                  <Ionicons 
-                    name="add-circle-outline" 
-                    size={16} 
-                    color={type === 'income' ? colors.white : colors.success} 
-                  />
-                  <Text style={[styles.typeBtnText, type === 'income' && styles.typeBtnTextActive]}>
-                    Income
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </Animated.View>
-
-            {/* Amount Input - Compact */}
-            <Animated.View entering={SlideInUp.delay(200)} style={styles.section}>
-              <View style={styles.amountContainer}>
-                <View style={styles.currencyContainer}>
-                  <Text style={styles.currencySymbol}>
-                    {getCurrencySymbol(data.settings.currency)}
-                  </Text>
-                </View>
-                <TextInput
-                  style={styles.amountInput}
-                  value={amount}
-                  onChangeText={(text) => setAmount(formatCurrency(text))}
-                  placeholder="0.00"
-                  keyboardType="numeric"
-                  placeholderTextColor={colors.textTertiary}
-                  selectionColor={colors.primary}
-                />
-              </View>
-              
-              {/* Quick Amounts - Compact Grid */}
-              <View style={styles.quickAmounts}>
-                {quickAmounts.map((quickAmount) => (
-                  <TouchableOpacity
-                    key={quickAmount}
-                    style={styles.quickAmountBtn}
-                    onPress={() => handleQuickAmount(quickAmount)}
-                  >
-                    <Text style={styles.quickAmountText}>
-                      {getCurrencySymbol(data.settings.currency)}{quickAmount}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </Animated.View>
-
-            {/* Description - Compact */}
-            <Animated.View entering={SlideInUp.delay(300)} style={styles.section}>
-              <View style={styles.inputContainer}>
-                <Ionicons name="document-text-outline" size={18} color={colors.primary} />
-                <TextInput
-                  style={styles.textInput}
-                  value={description}
-                  onChangeText={setDescription}
-                  placeholder="Description"
-                  placeholderTextColor={colors.textTertiary}
-                  selectionColor={colors.primary}
-                />
-              </View>
-            </Animated.View>
-
-            {/* Category - Compact */}
-            <Animated.View entering={SlideInUp.delay(400)} style={styles.section}>
-              <TouchableOpacity
-                style={styles.inputContainer}
-                onPress={() => setShowCategoryPicker(!showCategoryPicker)}
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Type Toggle - Compact */}
+        <Animated.View entering={SlideInUp.delay(100)} style={styles.section}>
+          <View style={styles.typeToggle}>
+            <TouchableOpacity
+              style={[
+                styles.typeBtn,
+                type === "expense" && styles.typeBtnActive,
+              ]}
+              onPress={() => {
+                setType("expense");
+                setCategory("");
+              }}
+            >
+              <Ionicons
+                name="remove-circle-outline"
+                size={16}
+                color={type === "expense" ? colors.white : colors.error}
+              />
+              <Text
+                style={[
+                  styles.typeBtnText,
+                  type === "expense" && styles.typeBtnTextActive,
+                ]}
               >
-                <Ionicons name="pricetag-outline" size={18} color={colors.primary} />
-                <Text style={[styles.categoryText, !category && styles.placeholderText]}>
-                  {category || 'Select category'}
+                Expense
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.typeBtn,
+                type === "income" && styles.typeBtnActive,
+              ]}
+              onPress={() => {
+                setType("income");
+                setCategory("");
+              }}
+            >
+              <Ionicons
+                name="add-circle-outline"
+                size={16}
+                color={type === "income" ? colors.white : colors.success}
+              />
+              <Text
+                style={[
+                  styles.typeBtnText,
+                  type === "income" && styles.typeBtnTextActive,
+                ]}
+              >
+                Income
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
+        {/* Amount Input - Compact */}
+        <Animated.View entering={SlideInUp.delay(200)} style={styles.section}>
+          <View style={styles.amountContainer}>
+            <View style={styles.currencyContainer}>
+              <Text style={styles.currencySymbol}>
+                {getCurrencySymbol(data.settings.currency)}
+              </Text>
+            </View>
+            <TextInput
+              style={styles.amountInput}
+              value={amount}
+              onChangeText={(text) => setAmount(formatCurrency(text))}
+              placeholder="0.00"
+              keyboardType="numeric"
+              placeholderTextColor={colors.textTertiary}
+              selectionColor={colors.primary}
+            />
+          </View>
+
+          {/* Quick Amounts - Compact Grid */}
+          <View style={styles.quickAmounts}>
+            {quickAmounts.map((quickAmount) => (
+              <TouchableOpacity
+                key={quickAmount}
+                style={styles.quickAmountBtn}
+                onPress={() => handleQuickAmount(quickAmount)}
+              >
+                <Text style={styles.quickAmountText}>
+                  {getCurrencySymbol(data.settings.currency)}
+                  {quickAmount}
                 </Text>
-                <Ionicons 
-                  name={showCategoryPicker ? "chevron-up" : "chevron-down"} 
-                  size={18} 
-                  color={colors.primary} 
-                />
               </TouchableOpacity>
-              
-              {showCategoryPicker && (
-                <Animated.View entering={FadeIn} style={styles.categoryPicker}>
-                  {currentCategories.map((cat) => (
-                    <TouchableOpacity
-                      key={cat.id}
-                      style={[styles.categoryOption, category === cat.name && styles.categoryOptionSelected]}
-                      onPress={() => {
-                        setCategory(cat.name);
-                        setShowCategoryPicker(false);
-                      }}
-                    >
-                      <Ionicons 
-                        name="pricetag" 
-                        size={14} 
-                        color={category === cat.name ? colors.white : colors.primary} 
-                      />
-                      <Text style={[styles.categoryOptionText, category === cat.name && styles.categoryOptionTextSelected]}>
-                        {cat.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </Animated.View>
-              )}
-            </Animated.View>
+            ))}
+          </View>
+        </Animated.View>
 
-            {/* Date - Compact */}
-            <Animated.View entering={SlideInUp.delay(500)} style={styles.section}>
-              <View style={styles.inputContainer}>
-                <Ionicons name="calendar-outline" size={18} color={colors.primary} />
-                <TextInput
-                  style={styles.textInput}
-                  value={date}
-                  onChangeText={setDate}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={colors.textTertiary}
-                  selectionColor={colors.primary}
-                />
-              </View>
-            </Animated.View>
-          </ScrollView>
-          
-          {/* Fixed Submit Button */}
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.submitContainer}
+        {/* Description - Compact */}
+        <Animated.View entering={SlideInUp.delay(300)} style={styles.section}>
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="document-text-outline"
+              size={18}
+              color={colors.primary}
+            />
+            <TextInput
+              style={styles.textInput}
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Description"
+              placeholderTextColor={colors.textTertiary}
+              selectionColor={colors.primary}
+            />
+          </View>
+        </Animated.View>
+
+        {/* Category - Compact */}
+        <Animated.View entering={SlideInUp.delay(400)} style={styles.section}>
+          <TouchableOpacity
+            style={styles.inputContainer}
+            onPress={() => setShowCategoryPicker(!showCategoryPicker)}
           >
-            <Animated.View entering={SlideInUp.delay(600)}>
-              <TouchableOpacity
-                style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
-                onPress={handleSave}
-                disabled={loading}
-              >
-                <LinearGradient
-                  colors={gradients.primary}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.submitGradient}
+            <Ionicons
+              name="pricetag-outline"
+              size={18}
+              color={colors.primary}
+            />
+            <Text
+              style={[styles.categoryText, !category && styles.placeholderText]}
+            >
+              {category || "Select category"}
+            </Text>
+            <Ionicons
+              name={showCategoryPicker ? "chevron-up" : "chevron-down"}
+              size={18}
+              color={colors.primary}
+            />
+          </TouchableOpacity>
+
+          {showCategoryPicker && (
+            <Animated.View entering={FadeIn} style={styles.categoryPicker}>
+              {currentCategories.map((cat) => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[
+                    styles.categoryOption,
+                    category === cat.name && styles.categoryOptionSelected,
+                  ]}
+                  onPress={() => {
+                    setCategory(cat.name);
+                    setShowCategoryPicker(false);
+                  }}
                 >
-                  {loading ? (
-                    <View style={styles.loadingContent}>
-                      <Ionicons name="refresh" size={18} color={colors.white} />
-                      <Text style={styles.submitText}>Updating...</Text>
-                    </View>
-                  ) : (
-                    <View style={styles.submitContent}>
-                      <Ionicons name="checkmark-circle" size={18} color={colors.white} />
-                      <Text style={styles.submitText}>Update Transaction</Text>
-                    </View>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
+                  <Ionicons
+                    name="pricetag"
+                    size={14}
+                    color={
+                      category === cat.name ? colors.white : colors.primary
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.categoryOptionText,
+                      category === cat.name &&
+                        styles.categoryOptionTextSelected,
+                    ]}
+                  >
+                    {cat.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </Animated.View>
-          </KeyboardAvoidingView>
+          )}
+        </Animated.View>
+
+        {/* Date - Compact */}
+        <Animated.View entering={SlideInUp.delay(500)} style={styles.section}>
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="calendar-outline"
+              size={18}
+              color={colors.primary}
+            />
+            <TextInput
+              style={styles.textInput}
+              value={date}
+              onChangeText={setDate}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={colors.textTertiary}
+              selectionColor={colors.primary}
+            />
+          </View>
+        </Animated.View>
+      </ScrollView>
+
+      {/* Fixed Submit Button */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.submitContainer}
+      >
+        <Animated.View entering={SlideInUp.delay(600)}>
+          <TouchableOpacity
+            style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
+            onPress={handleSave}
+            disabled={loading}
+          >
+            <LinearGradient
+              colors={gradients.primary}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.submitGradient}
+            >
+              {loading ? (
+                <View style={styles.loadingContent}>
+                  <Ionicons name="refresh" size={18} color={colors.white} />
+                  <Text style={styles.submitText}>Updating...</Text>
+                </View>
+              ) : (
+                <View style={styles.submitContent}>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={18}
+                    color={colors.white}
+                  />
+                  <Text style={styles.submitText}>Update Transaction</Text>
+                </View>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+      </KeyboardAvoidingView>
     </BottomModal>
   );
 };
@@ -305,8 +361,8 @@ const styles = StyleSheet.create({
   // Modal Container
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "flex-end",
   },
   backdropPressable: {
     flex: 1,
@@ -333,18 +389,18 @@ const styles = StyleSheet.create({
     height: 4,
     backgroundColor: colors.textTertiary,
     borderRadius: 2,
-    alignSelf: 'center',
+    alignSelf: "center",
     marginBottom: spacing.sm,
   },
   headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   title: {
     ...typography.h3,
     color: colors.textPrimary,
-    fontWeight: '700',
+    fontWeight: "700",
     fontSize: 18,
   },
   closeBtn: {
@@ -352,8 +408,8 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: 14,
     backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   // Content
@@ -370,7 +426,7 @@ const styles = StyleSheet.create({
 
   // Type Toggle
   typeToggle: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: 3,
@@ -378,9 +434,9 @@ const styles = StyleSheet.create({
   },
   typeBtn: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
     borderRadius: borderRadius.md,
@@ -392,7 +448,7 @@ const styles = StyleSheet.create({
   },
   typeBtnText: {
     ...typography.bodySmall,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textSecondary,
   },
   typeBtnTextActive: {
@@ -401,8 +457,8 @@ const styles = StyleSheet.create({
 
   // Amount Input
   amountContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
@@ -420,19 +476,19 @@ const styles = StyleSheet.create({
   currencySymbol: {
     ...typography.bodySmall,
     color: colors.white,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   amountInput: {
     flex: 1,
     ...typography.h3,
     color: colors.textPrimary,
-    fontWeight: '700',
+    fontWeight: "700",
     fontSize: 20,
-    textAlign: 'right',
+    textAlign: "right",
   },
   quickAmounts: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.xs,
   },
   quickAmountBtn: {
@@ -445,13 +501,13 @@ const styles = StyleSheet.create({
   quickAmountText: {
     ...typography.caption,
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 
   // Input Container (shared for description, category, date)
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
@@ -463,13 +519,13 @@ const styles = StyleSheet.create({
     flex: 1,
     ...typography.body,
     color: colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   categoryText: {
     flex: 1,
     ...typography.body,
     color: colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   placeholderText: {
     color: colors.textTertiary,
@@ -484,8 +540,8 @@ const styles = StyleSheet.create({
     ...shadows.md,
   },
   categoryOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
@@ -498,11 +554,11 @@ const styles = StyleSheet.create({
   categoryOptionText: {
     ...typography.bodySmall,
     color: colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   categoryOptionTextSelected: {
     color: colors.white,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 
   // Submit Button
@@ -512,11 +568,11 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     paddingHorizontal: spacing.sm,
     paddingTop: spacing.md,
-    paddingBottom: Platform.OS === 'ios' ? spacing.xl : spacing.lg,
+    paddingBottom: Platform.OS === "ios" ? spacing.xl : spacing.lg,
   },
   submitBtn: {
     borderRadius: borderRadius.lg,
-    overflow: 'hidden',
+    overflow: "hidden",
     ...shadows.lg,
   },
   submitGradient: {
@@ -527,21 +583,21 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   submitContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.sm,
   },
   loadingContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.sm,
   },
   submitText: {
     ...typography.button,
     color: colors.white,
-    fontWeight: '700',
+    fontWeight: "700",
     fontSize: 16,
   },
 });

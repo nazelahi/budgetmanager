@@ -1,5 +1,11 @@
-import { useSharedValue, useAnimatedStyle, withTiming, withSpring, runOnJS } from 'react-native-reanimated';
-import { useCallback } from 'react';
+import {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  runOnJS,
+} from "react-native-reanimated";
+import { useCallback } from "react";
 
 interface AnimationConfig {
   duration?: number;
@@ -13,17 +19,27 @@ export const useAnimation = () => {
   const useFadeAnimation = (initialOpacity: number = 0) => {
     const opacity = useSharedValue(initialOpacity);
 
-    const fadeIn = useCallback((config: AnimationConfig = {}) => {
-      opacity.value = withTiming(1, {
-        duration: config.duration || 300,
-      });
-    }, [opacity]);
+    const fadeIn = useCallback(
+      (config: AnimationConfig = {}) => {
+        opacity.value = withTiming(1, {
+          duration: config.duration || 300,
+        });
+      },
+      [opacity],
+    );
 
-    const fadeOut = useCallback((config: AnimationConfig = {}, onComplete?: () => void) => {
-      opacity.value = withTiming(0, {
-        duration: config.duration || 300,
-      }, onComplete ? () => runOnJS(onComplete)() : undefined);
-    }, [opacity]);
+    const fadeOut = useCallback(
+      (config: AnimationConfig = {}, onComplete?: () => void) => {
+        opacity.value = withTiming(
+          0,
+          {
+            duration: config.duration || 300,
+          },
+          onComplete ? () => runOnJS(onComplete)() : undefined,
+        );
+      },
+      [opacity],
+    );
 
     const animatedStyle = useAnimatedStyle(() => ({
       opacity: opacity.value,
@@ -36,19 +52,29 @@ export const useAnimation = () => {
   const useScaleAnimation = (initialScale: number = 1) => {
     const scale = useSharedValue(initialScale);
 
-    const scaleIn = useCallback((config: AnimationConfig = {}) => {
-      scale.value = withSpring(1, {
-        damping: config.damping || 15,
-        stiffness: config.stiffness || 100,
-      });
-    }, [scale]);
+    const scaleIn = useCallback(
+      (config: AnimationConfig = {}) => {
+        scale.value = withSpring(1, {
+          damping: config.damping || 15,
+          stiffness: config.stiffness || 100,
+        });
+      },
+      [scale],
+    );
 
-    const scaleOut = useCallback((config: AnimationConfig = {}, onComplete?: () => void) => {
-      scale.value = withSpring(0.95, {
-        damping: config.damping || 15,
-        stiffness: config.stiffness || 100,
-      }, onComplete ? () => runOnJS(onComplete)() : undefined);
-    }, [scale]);
+    const scaleOut = useCallback(
+      (config: AnimationConfig = {}, onComplete?: () => void) => {
+        scale.value = withSpring(
+          0.95,
+          {
+            damping: config.damping || 15,
+            stiffness: config.stiffness || 100,
+          },
+          onComplete ? () => runOnJS(onComplete)() : undefined,
+        );
+      },
+      [scale],
+    );
 
     const animatedStyle = useAnimatedStyle(() => ({
       transform: [{ scale: scale.value }],
@@ -61,19 +87,29 @@ export const useAnimation = () => {
   const useTranslateAnimation = (initialY: number = 0) => {
     const translateY = useSharedValue(initialY);
 
-    const slideIn = useCallback((config: AnimationConfig = {}) => {
-      translateY.value = withSpring(0, {
-        damping: config.damping || 15,
-        stiffness: config.stiffness || 100,
-      });
-    }, [translateY]);
+    const slideIn = useCallback(
+      (config: AnimationConfig = {}) => {
+        translateY.value = withSpring(0, {
+          damping: config.damping || 15,
+          stiffness: config.stiffness || 100,
+        });
+      },
+      [translateY],
+    );
 
-    const slideOut = useCallback((config: AnimationConfig = {}, onComplete?: () => void) => {
-      translateY.value = withSpring(50, {
-        damping: config.damping || 15,
-        stiffness: config.stiffness || 100,
-      }, onComplete ? () => runOnJS(onComplete)() : undefined);
-    }, [translateY]);
+    const slideOut = useCallback(
+      (config: AnimationConfig = {}, onComplete?: () => void) => {
+        translateY.value = withSpring(
+          50,
+          {
+            damping: config.damping || 15,
+            stiffness: config.stiffness || 100,
+          },
+          onComplete ? () => runOnJS(onComplete)() : undefined,
+        );
+      },
+      [translateY],
+    );
 
     const animatedStyle = useAnimatedStyle(() => ({
       transform: [{ translateY: translateY.value }],
@@ -88,40 +124,47 @@ export const useAnimation = () => {
     const scale = useSharedValue(0.8);
     const translateY = useSharedValue(30);
 
-    const animateIn = useCallback((config: AnimationConfig = {}) => {
-      opacity.value = withTiming(1, {
-        duration: config.duration || 300,
-      });
-      scale.value = withSpring(1, {
-        damping: config.damping || 15,
-        stiffness: config.stiffness || 100,
-      });
-      translateY.value = withSpring(0, {
-        damping: config.damping || 15,
-        stiffness: config.stiffness || 100,
-      });
-    }, [opacity, scale, translateY]);
+    const animateIn = useCallback(
+      (config: AnimationConfig = {}) => {
+        opacity.value = withTiming(1, {
+          duration: config.duration || 300,
+        });
+        scale.value = withSpring(1, {
+          damping: config.damping || 15,
+          stiffness: config.stiffness || 100,
+        });
+        translateY.value = withSpring(0, {
+          damping: config.damping || 15,
+          stiffness: config.stiffness || 100,
+        });
+      },
+      [opacity, scale, translateY],
+    );
 
-    const animateOut = useCallback((config: AnimationConfig = {}, onComplete?: () => void) => {
-      opacity.value = withTiming(0, {
-        duration: config.duration || 300,
-      });
-      scale.value = withSpring(0.8, {
-        damping: config.damping || 15,
-        stiffness: config.stiffness || 100,
-      });
-      translateY.value = withSpring(30, {
-        damping: config.damping || 15,
-        stiffness: config.stiffness || 100,
-      }, onComplete ? () => runOnJS(onComplete)() : undefined);
-    }, [opacity, scale, translateY]);
+    const animateOut = useCallback(
+      (config: AnimationConfig = {}, onComplete?: () => void) => {
+        opacity.value = withTiming(0, {
+          duration: config.duration || 300,
+        });
+        scale.value = withSpring(0.8, {
+          damping: config.damping || 15,
+          stiffness: config.stiffness || 100,
+        });
+        translateY.value = withSpring(
+          30,
+          {
+            damping: config.damping || 15,
+            stiffness: config.stiffness || 100,
+          },
+          onComplete ? () => runOnJS(onComplete)() : undefined,
+        );
+      },
+      [opacity, scale, translateY],
+    );
 
     const animatedStyle = useAnimatedStyle(() => ({
       opacity: opacity.value,
-      transform: [
-        { scale: scale.value },
-        { translateY: translateY.value },
-      ],
+      transform: [{ scale: scale.value }, { translateY: translateY.value }],
     }));
 
     return { animateIn, animateOut, animatedStyle };

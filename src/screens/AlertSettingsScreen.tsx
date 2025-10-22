@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,38 +6,44 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
-  Alert,
   Platform,
   Dimensions,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { 
-  FadeInDown, 
-  SlideInLeft, 
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, {
+  FadeInDown,
+  SlideInLeft,
   SlideInRight,
   FadeIn,
-} from 'react-native-reanimated';
-import { useApp } from '../contexts/AppContext';
-import { colors, spacing, typography, borderRadius, shadows } from '../utils/theme';
-import { AlertSettings } from '../types';
-import BudgetService from '../services/BudgetService';
+} from "react-native-reanimated";
+import { useApp } from "../contexts/AppContext";
+import {
+  colors,
+  spacing,
+  typography,
+  borderRadius,
+  shadows,
+} from "../utils/theme";
+import { AlertSettings } from "../types";
+import BudgetService from "../services/BudgetService";
+import ToastService from "../services/ToastService";
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get("window");
 
 const AlertSettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { refreshData } = useApp();
-  
+
   const [settings, setSettings] = useState<AlertSettings>({
     warningThresholds: [70, 80, 90],
     enablePushNotifications: true,
     enableEmailNotifications: false,
-    quietHours: { enabled: true, start: '22:00', end: '08:00' },
-    alertFrequency: 'immediate',
+    quietHours: { enabled: true, start: "22:00", end: "08:00" },
+    alertFrequency: "immediate",
     smartSuggestions: true,
   });
   const [loading, setLoading] = useState(true);
@@ -51,7 +57,7 @@ const AlertSettingsScreen: React.FC = () => {
       const alertSettings = await BudgetService.getAlertSettings();
       setSettings(alertSettings);
     } catch (error) {
-      console.error('Error loading alert settings:', error);
+      console.error("Error loading alert settings:", error);
     } finally {
       setLoading(false);
     }
@@ -63,42 +69,66 @@ const AlertSettingsScreen: React.FC = () => {
       setSettings(updatedSettings);
       await BudgetService.updateAlertSettings(newSettings);
       await refreshData();
+      ToastService.success(
+        "Alert Settings Updated",
+        "Your alert preferences have been saved.",
+      );
     } catch (error) {
-      console.error('Error updating alert settings:', error);
-      Alert.alert('Error', 'Failed to update settings. Please try again.');
+      console.error("Error updating alert settings:", error);
+      ToastService.error(
+        "Error",
+        "Failed to update settings. Please try again.",
+      );
     }
   };
 
   const handleThresholdChange = (threshold: number, enabled: boolean) => {
     let newThresholds = [...settings.warningThresholds];
-    
+
     if (enabled) {
       if (!newThresholds.includes(threshold)) {
         newThresholds.push(threshold);
         newThresholds.sort((a, b) => a - b);
       }
     } else {
-      newThresholds = newThresholds.filter(t => t !== threshold);
+      newThresholds = newThresholds.filter((t) => t !== threshold);
     }
-    
+
     updateSettings({ warningThresholds: newThresholds });
   };
 
-  const handleQuietHoursChange = (field: 'enabled' | 'start' | 'end', value: any) => {
+  const handleQuietHoursChange = (
+    field: "enabled" | "start" | "end",
+    value: any,
+  ) => {
     updateSettings({
-      quietHours: { ...settings.quietHours, [field]: value }
+      quietHours: { ...settings.quietHours, [field]: value },
     });
   };
 
-  const handleFrequencyChange = (frequency: 'immediate' | 'daily' | 'weekly') => {
+  const handleFrequencyChange = (
+    frequency: "immediate" | "daily" | "weekly",
+  ) => {
     updateSettings({ alertFrequency: frequency });
   };
 
   const thresholdOptions = [50, 60, 70, 80, 90, 95];
   const frequencyOptions = [
-    { value: 'immediate', label: 'Immediate', description: 'Get alerts as soon as thresholds are reached' },
-    { value: 'daily', label: 'Daily Summary', description: 'Receive a daily summary of budget alerts' },
-    { value: 'weekly', label: 'Weekly Summary', description: 'Receive a weekly summary of budget alerts' },
+    {
+      value: "immediate",
+      label: "Immediate",
+      description: "Get alerts as soon as thresholds are reached",
+    },
+    {
+      value: "daily",
+      label: "Daily Summary",
+      description: "Receive a daily summary of budget alerts",
+    },
+    {
+      value: "weekly",
+      label: "Weekly Summary",
+      description: "Receive a weekly summary of budget alerts",
+    },
   ];
 
   if (loading) {
@@ -112,16 +142,27 @@ const AlertSettingsScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#1B263B', '#0D1B2A']}
+        colors={["#1B263B", "#0D1B2A"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={[styles.headerGradient, { paddingTop: insets.top + spacing.xs }]}
       >
-        <Animated.View entering={SlideInLeft.delay(200)} style={styles.headerTitleContainer}>
-          <Ionicons name="notifications" size={18} color={colors.white} style={styles.headerIcon} />
+        <Animated.View
+          entering={SlideInLeft.delay(200)}
+          style={styles.headerTitleContainer}
+        >
+          <Ionicons
+            name="notifications"
+            size={18}
+            color={colors.white}
+            style={styles.headerIcon}
+          />
           <Text style={styles.headerTitle}>Alert Settings</Text>
         </Animated.View>
-        <Animated.View entering={SlideInRight.delay(300)} style={styles.headerActionContainer}>
+        <Animated.View
+          entering={SlideInRight.delay(300)}
+          style={styles.headerActionContainer}
+        >
           <TouchableOpacity
             style={styles.headerButton}
             onPress={() => navigation.goBack()}
@@ -151,14 +192,23 @@ const AlertSettingsScreen: React.FC = () => {
                 key={threshold}
                 style={[
                   styles.thresholdButton,
-                  settings.warningThresholds.includes(threshold) && styles.thresholdButtonActive
+                  settings.warningThresholds.includes(threshold) &&
+                    styles.thresholdButtonActive,
                 ]}
-                onPress={() => handleThresholdChange(threshold, !settings.warningThresholds.includes(threshold))}
+                onPress={() =>
+                  handleThresholdChange(
+                    threshold,
+                    !settings.warningThresholds.includes(threshold),
+                  )
+                }
               >
-                <Text style={[
-                  styles.thresholdText,
-                  settings.warningThresholds.includes(threshold) && styles.thresholdTextActive
-                ]}>
+                <Text
+                  style={[
+                    styles.thresholdText,
+                    settings.warningThresholds.includes(threshold) &&
+                      styles.thresholdTextActive,
+                  ]}
+                >
                   {threshold}%
                 </Text>
               </TouchableOpacity>
@@ -172,7 +222,7 @@ const AlertSettingsScreen: React.FC = () => {
             <Ionicons name="notifications" size={20} color={colors.primary} />
             <Text style={styles.sectionTitle}>Notifications</Text>
           </View>
-          
+
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingTitle}>Push Notifications</Text>
@@ -182,9 +232,15 @@ const AlertSettingsScreen: React.FC = () => {
             </View>
             <Switch
               value={settings.enablePushNotifications}
-              onValueChange={(value) => updateSettings({ enablePushNotifications: value })}
+              onValueChange={(value) =>
+                updateSettings({ enablePushNotifications: value })
+              }
               trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={settings.enablePushNotifications ? colors.white : colors.textSecondary}
+              thumbColor={
+                settings.enablePushNotifications
+                  ? colors.white
+                  : colors.textSecondary
+              }
             />
           </View>
 
@@ -197,9 +253,15 @@ const AlertSettingsScreen: React.FC = () => {
             </View>
             <Switch
               value={settings.enableEmailNotifications}
-              onValueChange={(value) => updateSettings({ enableEmailNotifications: value })}
+              onValueChange={(value) =>
+                updateSettings({ enableEmailNotifications: value })
+              }
               trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={settings.enableEmailNotifications ? colors.white : colors.textSecondary}
+              thumbColor={
+                settings.enableEmailNotifications
+                  ? colors.white
+                  : colors.textSecondary
+              }
             />
           </View>
         </Animated.View>
@@ -218,26 +280,37 @@ const AlertSettingsScreen: React.FC = () => {
               key={option.value}
               style={[
                 styles.frequencyOption,
-                settings.alertFrequency === option.value && styles.frequencyOptionActive
+                settings.alertFrequency === option.value &&
+                  styles.frequencyOptionActive,
               ]}
               onPress={() => handleFrequencyChange(option.value as any)}
             >
               <View style={styles.frequencyInfo}>
-                <Text style={[
-                  styles.frequencyTitle,
-                  settings.alertFrequency === option.value && styles.frequencyTitleActive
-                ]}>
+                <Text
+                  style={[
+                    styles.frequencyTitle,
+                    settings.alertFrequency === option.value &&
+                      styles.frequencyTitleActive,
+                  ]}
+                >
                   {option.label}
                 </Text>
-                <Text style={[
-                  styles.frequencyDescription,
-                  settings.alertFrequency === option.value && styles.frequencyDescriptionActive
-                ]}>
+                <Text
+                  style={[
+                    styles.frequencyDescription,
+                    settings.alertFrequency === option.value &&
+                      styles.frequencyDescriptionActive,
+                  ]}
+                >
                   {option.description}
                 </Text>
               </View>
               {settings.alertFrequency === option.value && (
-                <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={20}
+                  color={colors.primary}
+                />
               )}
             </TouchableOpacity>
           ))}
@@ -252,7 +325,7 @@ const AlertSettingsScreen: React.FC = () => {
           <Text style={styles.sectionDescription}>
             Don't receive alerts during these hours
           </Text>
-          
+
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingTitle}>Enable Quiet Hours</Text>
@@ -262,9 +335,15 @@ const AlertSettingsScreen: React.FC = () => {
             </View>
             <Switch
               value={settings.quietHours.enabled}
-              onValueChange={(value) => handleQuietHoursChange('enabled', value)}
+              onValueChange={(value) =>
+                handleQuietHoursChange("enabled", value)
+              }
               trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={settings.quietHours.enabled ? colors.white : colors.textSecondary}
+              thumbColor={
+                settings.quietHours.enabled
+                  ? colors.white
+                  : colors.textSecondary
+              }
             />
           </View>
 
@@ -273,15 +352,25 @@ const AlertSettingsScreen: React.FC = () => {
               <View style={styles.timeInput}>
                 <Text style={styles.timeLabel}>Start Time</Text>
                 <TouchableOpacity style={styles.timeButton}>
-                  <Text style={styles.timeText}>{settings.quietHours.start}</Text>
-                  <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
+                  <Text style={styles.timeText}>
+                    {settings.quietHours.start}
+                  </Text>
+                  <Ionicons
+                    name="chevron-down"
+                    size={16}
+                    color={colors.textSecondary}
+                  />
                 </TouchableOpacity>
               </View>
               <View style={styles.timeInput}>
                 <Text style={styles.timeLabel}>End Time</Text>
                 <TouchableOpacity style={styles.timeButton}>
                   <Text style={styles.timeText}>{settings.quietHours.end}</Text>
-                  <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
+                  <Ionicons
+                    name="chevron-down"
+                    size={16}
+                    color={colors.textSecondary}
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -297,7 +386,7 @@ const AlertSettingsScreen: React.FC = () => {
           <Text style={styles.sectionDescription}>
             Get personalized recommendations for better budget management
           </Text>
-          
+
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingTitle}>Enable Smart Suggestions</Text>
@@ -307,9 +396,13 @@ const AlertSettingsScreen: React.FC = () => {
             </View>
             <Switch
               value={settings.smartSuggestions}
-              onValueChange={(value) => updateSettings({ smartSuggestions: value })}
+              onValueChange={(value) =>
+                updateSettings({ smartSuggestions: value })
+              }
               trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={settings.smartSuggestions ? colors.white : colors.textSecondary}
+              thumbColor={
+                settings.smartSuggestions ? colors.white : colors.textSecondary
+              }
             />
           </View>
         </Animated.View>
@@ -325,8 +418,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: colors.background,
   },
   loadingText: {
@@ -334,17 +427,17 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   headerGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: "rgba(255, 255, 255, 0.1)",
   },
   headerTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   headerIcon: {
@@ -353,18 +446,18 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.h4,
     color: colors.white,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   headerActionContainer: {
-    position: 'relative',
+    position: "relative",
   },
   headerButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   scrollView: {
     flex: 1,
@@ -382,14 +475,14 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: spacing.sm,
   },
   sectionTitle: {
     ...typography.h4,
     color: colors.textPrimary,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: spacing.sm,
   },
   sectionDescription: {
@@ -398,8 +491,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   thresholdGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
   },
   thresholdButton: {
@@ -417,15 +510,15 @@ const styles = StyleSheet.create({
   thresholdText: {
     ...typography.body,
     color: colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   thresholdTextActive: {
     color: colors.white,
   },
   settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -437,7 +530,7 @@ const styles = StyleSheet.create({
   settingTitle: {
     ...typography.body,
     color: colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: spacing.xs,
   },
   settingDescription: {
@@ -445,9 +538,9 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   frequencyOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
@@ -457,7 +550,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   frequencyOptionActive: {
-    backgroundColor: colors.primary + '20',
+    backgroundColor: colors.primary + "20",
     borderColor: colors.primary,
   },
   frequencyInfo: {
@@ -466,7 +559,7 @@ const styles = StyleSheet.create({
   frequencyTitle: {
     ...typography.body,
     color: colors.textPrimary,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: spacing.xs,
   },
   frequencyTitleActive: {
@@ -480,7 +573,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   timeRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.md,
     marginTop: spacing.md,
   },
@@ -493,9 +586,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   timeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 import {
   Modal,
   View,
@@ -8,17 +8,17 @@ import {
   StyleSheet,
   Dimensions,
   StatusBar,
-} from 'react-native';
+} from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   runOnJS,
-} from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, gradients, spacing } from '../utils/theme';
+} from "react-native-reanimated";
+import { Ionicons } from "@expo/vector-icons";
+import { colors, gradients, spacing } from "../utils/theme";
 
-const { height: screenHeight } = Dimensions.get('window');
+const { height: screenHeight } = Dimensions.get("window");
 
 interface BottomModalProps {
   visible: boolean;
@@ -43,11 +43,11 @@ const BottomModal: React.FC<BottomModalProps> = ({
   showCancelButton = true,
   showSaveButton = false,
   onSave,
-  saveButtonText = 'Save',
+  saveButtonText = "Save",
   saveButtonDisabled = false,
   isLoading = false,
-  height = '90%',
-  maxHeight = '95%',
+  height = "90%",
+  maxHeight = "95%",
 }) => {
   // Animation values - set initial values based on visible prop
   const modalTranslateY = useSharedValue(visible ? 0 : screenHeight);
@@ -93,37 +93,54 @@ const BottomModal: React.FC<BottomModalProps> = ({
       onRequestClose={handleClose}
     >
       <Animated.View style={[styles.modalBackdrop, animatedBackdropStyle]}>
-        <Pressable style={styles.modalBackdropPressable} onPress={handleClose} />
-        
-        <Animated.View style={[
-          styles.modalContainer,
-          animatedModalStyle,
-          { height: height as any, maxHeight: maxHeight as any }
-        ]}>
+        <Pressable
+          style={styles.modalBackdropPressable}
+          onPress={handleClose}
+        />
+
+        <Animated.View
+          style={[
+            styles.modalContainer,
+            animatedModalStyle,
+            { height: height as any, maxHeight: maxHeight as any },
+          ]}
+        >
           {/* Header with handle */}
           <View style={styles.modalHeader}>
             <View style={styles.handle} />
             <View style={styles.headerContent}>
               {showCancelButton && (
-                <TouchableOpacity style={styles.cancelButton} onPress={handleClose}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={handleClose}
+                >
                   <Text style={styles.cancelText}>Cancel</Text>
                 </TouchableOpacity>
               )}
               <Text style={styles.modalTitle}>{title}</Text>
               <View style={styles.headerActions}>
                 {showSaveButton && (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={[
                       styles.saveButton,
-                      (saveButtonDisabled || isLoading) && styles.saveButtonDisabled
+                      (saveButtonDisabled || isLoading) &&
+                        styles.saveButtonDisabled,
                     ]}
                     onPress={handleSave}
                     disabled={saveButtonDisabled || isLoading}
                   >
                     {isLoading ? (
-                      <Ionicons name="hourglass" size={16} color={colors.white} />
+                      <Ionicons
+                        name="hourglass"
+                        size={16}
+                        color={colors.white}
+                      />
                     ) : (
-                      <Ionicons name="checkmark" size={16} color={colors.white} />
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={colors.white}
+                      />
                     )}
                   </TouchableOpacity>
                 )}
@@ -132,9 +149,7 @@ const BottomModal: React.FC<BottomModalProps> = ({
           </View>
 
           {/* Content */}
-          <View style={styles.modalContent}>
-            {children}
-          </View>
+          <View style={styles.modalContent}>{children}</View>
         </Animated.View>
       </Animated.View>
     </Modal>
@@ -144,8 +159,8 @@ const BottomModal: React.FC<BottomModalProps> = ({
 const styles = StyleSheet.create({
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalBackdropPressable: {
     flex: 1,
@@ -154,9 +169,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    minHeight: '90%',
-    maxHeight: '95%',
-    shadowColor: '#000',
+    minHeight: "90%",
+    maxHeight: "95%",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: -4,
@@ -177,13 +192,13 @@ const styles = StyleSheet.create({
     height: 4,
     backgroundColor: colors.textSecondary,
     borderRadius: 2,
-    alignSelf: 'center',
+    alignSelf: "center",
     marginBottom: 16,
   },
   headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   cancelButton: {
     paddingVertical: 8,
@@ -192,27 +207,27 @@ const styles = StyleSheet.create({
   cancelText: {
     fontSize: 16,
     color: colors.textSecondary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textPrimary,
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
     marginHorizontal: 16,
   },
   headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   saveButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
     backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     shadowColor: colors.primary,
     shadowOffset: {
       width: 0,

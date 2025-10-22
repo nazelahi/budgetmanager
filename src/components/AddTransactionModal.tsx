@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -6,47 +6,66 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   Dimensions,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useApp } from '../contexts/AppContext';
-import { colors, spacing, typography, borderRadius, shadows, getCurrencySymbol } from '../utils/theme';
-import BottomModal from './BottomModal';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useApp } from "../contexts/AppContext";
+import {
+  colors,
+  spacing,
+  typography,
+  borderRadius,
+  shadows,
+  getCurrencySymbol,
+} from "../utils/theme";
+import BottomModal from "./BottomModal";
+import ToastService from "../services/ToastService";
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get("window");
 
 interface AddTransactionModalProps {
   visible: boolean;
   onClose: () => void;
 }
 
-const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ visible, onClose }) => {
+const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
+  visible,
+  onClose,
+}) => {
   const { data, addTransaction } = useApp();
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [type, setType] = useState<'income' | 'expense'>('expense');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [type, setType] = useState<"income" | "expense">("expense");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [loading, setLoading] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
-  const incomeCategories = data.categories.filter(c => c.type === 'income');
-  const expenseCategories = data.categories.filter(c => c.type === 'expense');
-  const currentCategories = type === 'income' ? incomeCategories : expenseCategories;
+  const incomeCategories = useMemo(
+    () => data.categories.filter((c) => c.type === "income"),
+    [data.categories],
+  );
+  const expenseCategories = useMemo(
+    () => data.categories.filter((c) => c.type === "expense"),
+    [data.categories],
+  );
+  const currentCategories = useMemo(
+    () => (type === "income" ? incomeCategories : expenseCategories),
+    [type, incomeCategories, expenseCategories],
+  );
 
   // Quick amount buttons - more compact
   const quickAmounts = [10, 25, 50, 100, 200, 500];
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!amount || !description || !category) {
-      Alert.alert('Error', 'Please fill in all fields');
+      ToastService.error("Error", "Please fill in all fields");
       return;
     }
 
     const amountNum = parseFloat(amount);
     if (isNaN(amountNum) || amountNum <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount');
+      ToastService.error("Error", "Please enter a valid amount");
       return;
     }
 
@@ -61,30 +80,29 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ visible, onCl
       });
 
       // Reset form
-      setAmount('');
-      setDescription('');
-      setCategory('');
-      setType('expense');
-      setDate(new Date().toISOString().split('T')[0]);
+      setAmount("");
+      setDescription("");
+      setCategory("");
+      setType("expense");
+      setDate(new Date().toISOString().split("T")[0]);
 
-      Alert.alert('Success', 'Transaction added successfully', [
-        { text: 'OK', onPress: onClose }
-      ]);
+      ToastService.success("Success", "Transaction added successfully");
+      onClose();
     } catch (error) {
-      Alert.alert('Error', 'Failed to add transaction');
+      ToastService.error("Error", "Failed to add transaction");
     } finally {
       setLoading(false);
     }
-  };
+  }, [amount, description, category, addTransaction, type, date, onClose]);
 
   const formatCurrency = (value: string) => {
-    const numericValue = value.replace(/[^0-9.]/g, '');
+    const numericValue = value.replace(/[^0-9.]/g, "");
     return numericValue;
   };
 
-  const handleQuickAmount = (amount: number) => {
-    setAmount(amount.toString());
-  };
+  const handleQuickAmount = useCallback((quick: number) => {
+    setAmount(quick.toString());
+  }, []);
 
   return (
     <BottomModal
@@ -96,32 +114,51 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ visible, onCl
       saveButtonDisabled={!amount || !description || !category}
       isLoading={loading}
     >
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={styles.scrollView}
+      >
         {/* Transaction Type Toggle */}
         <View style={styles.typeToggle}>
           <TouchableOpacity
-            style={[styles.typeButton, type === 'expense' && styles.typeButtonActive]}
-            onPress={() => setType('expense')}
+            style={[
+              styles.typeButton,
+              type === "expense" && styles.typeButtonActive,
+            ]}
+            onPress={() => setType("expense")}
           >
-            <Ionicons 
-              name="remove-circle-outline" 
-              size={20} 
-              color={type === 'expense' ? colors.white : colors.textSecondary} 
+            <Ionicons
+              name="remove-circle-outline"
+              size={20}
+              color={type === "expense" ? colors.white : colors.textSecondary}
             />
-            <Text style={[styles.typeButtonText, type === 'expense' && styles.typeButtonTextActive]}>
+            <Text
+              style={[
+                styles.typeButtonText,
+                type === "expense" && styles.typeButtonTextActive,
+              ]}
+            >
               Expense
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.typeButton, type === 'income' && styles.typeButtonActive]}
-            onPress={() => setType('income')}
+            style={[
+              styles.typeButton,
+              type === "income" && styles.typeButtonActive,
+            ]}
+            onPress={() => setType("income")}
           >
-            <Ionicons 
-              name="add-circle-outline" 
-              size={20} 
-              color={type === 'income' ? colors.white : colors.textSecondary} 
+            <Ionicons
+              name="add-circle-outline"
+              size={20}
+              color={type === "income" ? colors.white : colors.textSecondary}
             />
-            <Text style={[styles.typeButtonText, type === 'income' && styles.typeButtonTextActive]}>
+            <Text
+              style={[
+                styles.typeButtonText,
+                type === "income" && styles.typeButtonTextActive,
+              ]}
+            >
               Income
             </Text>
           </TouchableOpacity>
@@ -131,7 +168,9 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ visible, onCl
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Amount</Text>
           <View style={styles.amountContainer}>
-            <Text style={styles.currencySymbol}>{getCurrencySymbol(data.settings.currency)}</Text>
+            <Text style={styles.currencySymbol}>
+              {getCurrencySymbol(data.settings.currency)}
+            </Text>
             <TextInput
               style={styles.amountInput}
               value={amount}
@@ -142,7 +181,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ visible, onCl
               returnKeyType="next"
             />
           </View>
-          
+
           {/* Quick Amount Buttons */}
           <View style={styles.quickAmounts}>
             {quickAmounts.map((quickAmount) => (
@@ -177,10 +216,19 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ visible, onCl
             style={styles.categoryButton}
             onPress={() => setShowCategoryPicker(!showCategoryPicker)}
           >
-            <Text style={[styles.categoryButtonText, !category && styles.categoryButtonPlaceholder]}>
-              {category || 'Select category'}
+            <Text
+              style={[
+                styles.categoryButtonText,
+                !category && styles.categoryButtonPlaceholder,
+              ]}
+            >
+              {category || "Select category"}
             </Text>
-            <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
+            <Ionicons
+              name="chevron-down"
+              size={20}
+              color={colors.textSecondary}
+            />
           </TouchableOpacity>
 
           {/* Category Picker */}
@@ -191,20 +239,32 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ visible, onCl
                   key={cat.id}
                   style={[
                     styles.categoryOption,
-                    category === cat.name && styles.categoryOptionSelected
+                    category === cat.name && styles.categoryOptionSelected,
                   ]}
                   onPress={() => {
                     setCategory(cat.name);
                     setShowCategoryPicker(false);
                   }}
                 >
-                  <View style={[styles.categoryIcon, { backgroundColor: cat.color }]}>
-                    <Ionicons name={cat.icon as any} size={16} color={colors.white} />
+                  <View
+                    style={[
+                      styles.categoryIcon,
+                      { backgroundColor: cat.color },
+                    ]}
+                  >
+                    <Ionicons
+                      name={cat.icon as any}
+                      size={16}
+                      color={colors.white}
+                    />
                   </View>
-                  <Text style={[
-                    styles.categoryOptionText,
-                    category === cat.name && styles.categoryOptionTextSelected
-                  ]}>
+                  <Text
+                    style={[
+                      styles.categoryOptionText,
+                      category === cat.name &&
+                        styles.categoryOptionTextSelected,
+                    ]}
+                  >
                     {cat.name}
                   </Text>
                 </TouchableOpacity>
@@ -235,7 +295,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   typeToggle: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: colors.backgroundSecondary,
     borderRadius: borderRadius.lg,
     padding: 4,
@@ -243,9 +303,9 @@ const styles = StyleSheet.create({
   },
   typeButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
   },
@@ -254,7 +314,7 @@ const styles = StyleSheet.create({
   },
   typeButtonText: {
     fontSize: typography.body.fontSize,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textSecondary,
     marginLeft: spacing.sm,
   },
@@ -266,13 +326,13 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: typography.body.fontSize,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   amountContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.backgroundSecondary,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
@@ -281,19 +341,19 @@ const styles = StyleSheet.create({
   },
   currencySymbol: {
     fontSize: typography.h3.fontSize,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textPrimary,
     marginRight: spacing.sm,
   },
   amountInput: {
     flex: 1,
     fontSize: typography.h3.fontSize,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textPrimary,
   },
   quickAmounts: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
   },
   quickAmountButton: {
@@ -304,7 +364,7 @@ const styles = StyleSheet.create({
   },
   quickAmountText: {
     fontSize: typography.body.fontSize,
-    fontWeight: '500',
+    fontWeight: "500",
     color: colors.textPrimary,
   },
   textInput: {
@@ -316,9 +376,9 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   categoryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: colors.backgroundSecondary,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
@@ -338,21 +398,21 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
   },
   categoryOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
   },
   categoryOptionSelected: {
-    backgroundColor: colors.primary + '20',
+    backgroundColor: colors.primary + "20",
   },
   categoryIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: spacing.md,
   },
   categoryOptionText: {
@@ -362,7 +422,7 @@ const styles = StyleSheet.create({
   },
   categoryOptionTextSelected: {
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

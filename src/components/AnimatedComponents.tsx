@@ -1,5 +1,12 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, TextInput } from 'react-native';
+import React, { useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+  TextInput,
+} from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -10,13 +17,20 @@ import Animated, {
   interpolate,
   Extrapolate,
   createAnimatedComponent,
-} from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
+} from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 // import { BlurView } from '@react-native-community/blur';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, shadows, gradients, animations } from '../utils/theme';
+import { Ionicons } from "@expo/vector-icons";
+import {
+  colors,
+  spacing,
+  borderRadius,
+  shadows,
+  gradients,
+  animations,
+} from "../utils/theme";
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get("window");
 
 // Create animated components
 const AnimatedTextInput = createAnimatedComponent(TextInput);
@@ -48,24 +62,21 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
   useEffect(() => {
     opacity.value = withDelay(
       delay,
-      withTiming(1, { duration: animations.normal })
+      withTiming(1, { duration: animations.normal }),
     );
     translateY.value = withDelay(
       delay,
-      withSpring(0, { damping: 15, stiffness: 100 })
+      withSpring(0, { damping: 15, stiffness: 100 }),
     );
     scale.value = withDelay(
       delay,
-      withSpring(1, { damping: 15, stiffness: 100 })
+      withSpring(1, { damping: 15, stiffness: 100 }),
     );
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
+    transform: [{ translateY: translateY.value }, { scale: scale.value }],
   }));
 
   const pressIn = () => {
@@ -128,8 +139,8 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
 interface AnimatedButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'small' | 'medium' | 'large';
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "small" | "medium" | "large";
   disabled?: boolean;
   loading?: boolean;
   icon?: keyof typeof Ionicons.glyphMap;
@@ -140,8 +151,8 @@ interface AnimatedButtonProps {
 export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
   title,
   onPress,
-  variant = 'primary',
-  size = 'medium',
+  variant = "primary",
+  size = "medium",
   disabled = false,
   loading = false,
   icon,
@@ -163,14 +174,16 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
     if (!disabled && !loading) {
       scale.value = withSequence(
         withSpring(0.9, { damping: 15, stiffness: 200 }),
-        withSpring(1, { damping: 15, stiffness: 200 })
+        withSpring(1, { damping: 15, stiffness: 200 }),
       );
       onPress();
     }
   };
 
   useEffect(() => {
-    opacity.value = withTiming(disabled ? 0.5 : 1, { duration: animations.fast });
+    opacity.value = withTiming(disabled ? 0.5 : 1, {
+      duration: animations.fast,
+    });
   }, [disabled]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -180,15 +193,15 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
 
   const getButtonStyle = () => {
     const baseStyle = [styles.button, styles[`button_${size}`]];
-    
+
     switch (variant) {
-      case 'primary':
+      case "primary":
         return [...baseStyle, styles.buttonPrimary];
-      case 'secondary':
+      case "secondary":
         return [...baseStyle, styles.buttonSecondary];
-      case 'outline':
+      case "outline":
         return [...baseStyle, styles.buttonOutline];
-      case 'ghost':
+      case "ghost":
         return [...baseStyle, styles.buttonGhost];
       default:
         return [...baseStyle, styles.buttonPrimary];
@@ -197,15 +210,15 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
 
   const getTextStyle = () => {
     const baseStyle = [styles.buttonText, styles[`buttonText_${size}`]];
-    
+
     switch (variant) {
-      case 'primary':
+      case "primary":
         return [...baseStyle, styles.buttonTextPrimary];
-      case 'secondary':
+      case "secondary":
         return [...baseStyle, styles.buttonTextSecondary];
-      case 'outline':
+      case "outline":
         return [...baseStyle, styles.buttonTextOutline];
-      case 'ghost':
+      case "ghost":
         return [...baseStyle, styles.buttonTextGhost];
       default:
         return [...baseStyle, styles.buttonTextPrimary];
@@ -221,12 +234,12 @@ export const AnimatedButton: React.FC<AnimatedButtonProps> = ({
       ) : icon ? (
         <Ionicons
           name={icon}
-          size={size === 'small' ? 16 : size === 'large' ? 20 : 18}
-          color={variant === 'primary' ? colors.white : colors.primary}
+          size={size === "small" ? 16 : size === "large" ? 20 : 18}
+          color={variant === "primary" ? colors.white : colors.primary}
           style={styles.buttonIcon}
         />
       ) : null}
-      <Text style={getTextStyle()}>{loading ? 'Loading...' : title}</Text>
+      <Text style={getTextStyle()}>{loading ? "Loading..." : title}</Text>
     </View>
   );
 
@@ -265,7 +278,7 @@ interface AnimatedInputProps {
   error?: string;
   disabled?: boolean;
   multiline?: boolean;
-  keyboardType?: 'default' | 'numeric' | 'email-address';
+  keyboardType?: "default" | "numeric" | "email-address";
   style?: any;
 }
 
@@ -277,7 +290,7 @@ export const AnimatedInput: React.FC<AnimatedInputProps> = ({
   error,
   disabled = false,
   multiline = false,
-  keyboardType = 'default',
+  keyboardType = "default",
   style,
 }) => {
   const focusScale = useSharedValue(1);
@@ -324,7 +337,9 @@ export const AnimatedInput: React.FC<AnimatedInputProps> = ({
   }));
 
   return (
-    <Animated.View style={[styles.inputContainer, animatedContainerStyle, style]}>
+    <Animated.View
+      style={[styles.inputContainer, animatedContainerStyle, style]}
+    >
       {label && (
         <Animated.Text style={[styles.inputLabel, animatedLabelStyle]}>
           {label}
@@ -363,7 +378,7 @@ interface SkeletonProps {
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({
-  width = '100%',
+  width = "100%",
   height = 20,
   borderRadius: borderRadiusValue = borderRadius.md,
   style,
@@ -386,7 +401,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
       shimmer.value,
       [0, 0.5, 1],
       [0.3, 0.7, 0.3],
-      Extrapolate.CLAMP
+      Extrapolate.CLAMP,
     ),
   }));
 
@@ -412,11 +427,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     ...shadows.md,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   glassCard: {
     borderRadius: borderRadius.lg,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   gradientCard: {
     borderRadius: borderRadius.lg,
@@ -430,8 +445,8 @@ const styles = StyleSheet.create({
   // Button Styles
   button: {
     borderRadius: borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     ...shadows.sm,
   },
   button_small: {
@@ -456,12 +471,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondary,
   },
   buttonOutline: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 2,
     borderColor: colors.primary,
   },
   buttonGhost: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   gradientButton: {
     borderRadius: borderRadius.md,
@@ -469,16 +484,16 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonIcon: {
     marginRight: spacing.sm,
   },
   buttonText: {
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
   buttonText_small: {
     fontSize: 14,
@@ -510,14 +525,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   inputLabel: {
-    position: 'absolute',
+    position: "absolute",
     left: spacing.md,
     top: spacing.md,
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.xs,
     color: colors.textSecondary,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     zIndex: 1,
   },
   inputWrapper: {
@@ -534,7 +549,7 @@ const styles = StyleSheet.create({
   },
   inputMultiline: {
     minHeight: 100,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   inputError: {
     borderColor: colors.error,

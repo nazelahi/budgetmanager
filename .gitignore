@@ -39,3 +39,16 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+/android/app/build/
+/android/build/
+
+# Build artifacts
+*.aab
+*.apk
+
+# Secrets/keystores
+*.keystore
+production.keystore
+correct_production.keystore
+upload-keystore.keystore
+android/app/debug.keystore

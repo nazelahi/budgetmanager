@@ -1,6 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
-import { colors, spacing, typography, borderRadius, shadows } from '../utils/theme';
+import React, { useState } from "react";
+import { View, Text, TextInput, StyleSheet } from "react-native";
+import {
+  colors,
+  spacing,
+  typography,
+  borderRadius,
+  shadows,
+} from "../utils/theme";
 
 interface SimpleInputProps {
   value: string;
@@ -10,7 +16,7 @@ interface SimpleInputProps {
   error?: string;
   disabled?: boolean;
   multiline?: boolean;
-  keyboardType?: 'default' | 'numeric' | 'email-address';
+  keyboardType?: "default" | "numeric" | "email-address";
   style?: any;
 }
 
@@ -22,22 +28,22 @@ export const SimpleInput: React.FC<SimpleInputProps> = ({
   error,
   disabled = false,
   multiline = false,
-  keyboardType = 'default',
+  keyboardType = "default",
   style,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
   return (
     <View style={[styles.inputContainer, style]}>
-      {label && (
-        <Text style={styles.inputLabel}>{label}</Text>
-      )}
-      <View style={[
-        styles.inputWrapper,
-        isFocused && styles.inputFocused,
-        error && styles.inputError,
-        disabled && styles.inputDisabled,
-      ]}>
+      {label && <Text style={styles.inputLabel}>{label}</Text>}
+      <View
+        style={[
+          styles.inputWrapper,
+          isFocused && styles.inputFocused,
+          error && styles.inputError,
+          disabled && styles.inputDisabled,
+        ]}
+      >
         <TextInput
           value={value}
           onChangeText={onChangeText}
@@ -48,10 +54,7 @@ export const SimpleInput: React.FC<SimpleInputProps> = ({
           editable={!disabled}
           multiline={multiline}
           keyboardType={keyboardType}
-          style={[
-            styles.input,
-            multiline && styles.inputMultiline,
-          ]}
+          style={[styles.input, multiline && styles.inputMultiline]}
         />
       </View>
       {error && <Text style={styles.inputErrorText}>{error}</Text>}
@@ -66,7 +69,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     ...typography.bodySmall,
     color: colors.textPrimary,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: spacing.sm,
   },
   inputWrapper: {
@@ -93,7 +96,7 @@ const styles = StyleSheet.create({
   },
   inputMultiline: {
     minHeight: 100,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   inputErrorText: {
     color: colors.error,

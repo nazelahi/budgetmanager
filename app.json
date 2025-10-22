@@ -2,7 +2,7 @@
   "expo": {
     "name": "Money Pro",
     "slug": "budgetmanager",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -20,7 +20,8 @@
       }
     },
     "android": {
-      "package": "com.nazelahi.moneypro",
+      "package": "com.nazelahi.budgetmanager",
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0D1B2A"
@@ -31,10 +32,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-font",
-      "expo-dev-client"
-    ],
+    "plugins": ["expo-font", "expo-dev-client"],
     "updates": {
       "url": "https://u.expo.dev/6265e41f-cf77-4bac-a5fc-4566b87d1faf"
     },
@@ -44,7 +42,8 @@
     "extra": {
       "eas": {
         "projectId": "6265e41f-cf77-4bac-a5fc-4566b87d1faf"
-      }
+      },
+      "loggingEnabled": false
     },
     "owner": "nazelahi"
   }

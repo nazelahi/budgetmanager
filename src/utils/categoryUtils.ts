@@ -1,4 +1,4 @@
-import { Category } from '../types';
+import { Category } from "../types";
 
 /**
  * Get category details by category name
@@ -6,8 +6,11 @@ import { Category } from '../types';
  * @param categories - Array of all categories
  * @returns Category object or null if not found
  */
-export const getCategoryByName = (categoryName: string, categories: Category[]): Category | null => {
-  return categories.find(category => category.name === categoryName) || null;
+export const getCategoryByName = (
+  categoryName: string,
+  categories: Category[],
+): Category | null => {
+  return categories.find((category) => category.name === categoryName) || null;
 };
 
 /**
@@ -16,9 +19,12 @@ export const getCategoryByName = (categoryName: string, categories: Category[]):
  * @param categories - Array of all categories
  * @returns Icon name or default icon
  */
-export const getCategoryIcon = (categoryName: string, categories: Category[]): string => {
+export const getCategoryIcon = (
+  categoryName: string,
+  categories: Category[],
+): string => {
   const category = getCategoryByName(categoryName, categories);
-  return category?.icon || 'pricetag';
+  return category?.icon || "pricetag";
 };
 
 /**
@@ -27,9 +33,12 @@ export const getCategoryIcon = (categoryName: string, categories: Category[]): s
  * @param categories - Array of all categories
  * @returns Color string or default color
  */
-export const getCategoryColor = (categoryName: string, categories: Category[]): string => {
+export const getCategoryColor = (
+  categoryName: string,
+  categories: Category[],
+): string => {
   const category = getCategoryByName(categoryName, categories);
-  return category?.color || '#9E9E9E';
+  return category?.color || "#9E9E9E";
 };
 
 /**
@@ -38,10 +47,13 @@ export const getCategoryColor = (categoryName: string, categories: Category[]): 
  * @param categories - Array of all categories
  * @returns Object with icon and color
  */
-export const getCategoryDetails = (categoryName: string, categories: Category[]) => {
+export const getCategoryDetails = (
+  categoryName: string,
+  categories: Category[],
+) => {
   const category = getCategoryByName(categoryName, categories);
   return {
-    icon: category?.icon || 'pricetag',
-    color: category?.color || '#9E9E9E'
+    icon: category?.icon || "pricetag",
+    color: category?.color || "#9E9E9E",
   };
 };

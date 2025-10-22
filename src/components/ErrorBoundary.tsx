@@ -1,6 +1,6 @@
-import React, { Component, ReactNode } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { colors, spacing, typography } from '../utils/theme';
+import React, { Component, ReactNode } from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { colors, spacing, typography } from "../utils/theme";
 
 interface Props {
   children: ReactNode;
@@ -22,7 +22,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
   }
 
   render() {
@@ -31,7 +31,7 @@ class ErrorBoundary extends Component<Props, State> {
         <View style={styles.container}>
           <Text style={styles.title}>Something went wrong</Text>
           <Text style={styles.message}>
-            {this.state.error?.message || 'An unexpected error occurred'}
+            {this.state.error?.message || "An unexpected error occurred"}
           </Text>
           <TouchableOpacity
             style={styles.button}
@@ -50,8 +50,8 @@ class ErrorBoundary extends Component<Props, State> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: spacing.lg,
     backgroundColor: colors.background,
   },
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   message: {
     ...typography.body,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.lg,
   },
   button: {

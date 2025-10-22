@@ -1,21 +1,21 @@
-import React from 'react';
-import { View, ViewStyle } from 'react-native';
-import Animated, { 
-  FadeInDown, 
-  FadeInUp, 
-  SlideInRight, 
+import React from "react";
+import { View, ViewStyle } from "react-native";
+import Animated, {
+  FadeInDown,
+  FadeInUp,
+  SlideInRight,
   SlideInLeft,
   FadeIn,
   BounceIn,
   ZoomIn,
   EnteringAnimation,
-  Layout
-} from 'react-native-reanimated';
+  Layout,
+} from "react-native-reanimated";
 
 interface AnimatedWrapperProps {
   children: React.ReactNode;
   delay?: number;
-  direction?: 'up' | 'down' | 'left' | 'right' | 'fade' | 'bounce' | 'zoom';
+  direction?: "up" | "down" | "left" | "right" | "fade" | "bounce" | "zoom";
   duration?: number;
   style?: ViewStyle;
   entering?: EnteringAnimation;
@@ -27,31 +27,31 @@ interface AnimatedWrapperProps {
 export const AnimatedWrapper: React.FC<AnimatedWrapperProps> = ({
   children,
   delay = 0,
-  direction = 'up',
+  direction = "up",
   duration = 300,
   style,
   entering,
   useTransform = false,
-  transformStyle
+  transformStyle,
 }) => {
   const getEnteringAnimation = (): EnteringAnimation => {
     if (entering) return entering;
-    
+
     const baseAnimation = (() => {
       switch (direction) {
-        case 'up':
+        case "up":
           return FadeInUp;
-        case 'down':
+        case "down":
           return FadeInDown;
-        case 'left':
+        case "left":
           return SlideInLeft;
-        case 'right':
+        case "right":
           return SlideInRight;
-        case 'fade':
+        case "fade":
           return FadeIn;
-        case 'bounce':
+        case "bounce":
           return BounceIn;
-        case 'zoom':
+        case "zoom":
           return ZoomIn;
         default:
           return FadeInUp;
@@ -64,8 +64,8 @@ export const AnimatedWrapper: React.FC<AnimatedWrapperProps> = ({
   // For Reanimated 4.x, we need to be more careful about mixing animations
   // Use layout animations only to avoid the warning
   return (
-    <Animated.View 
-      entering={getEnteringAnimation()} 
+    <Animated.View
+      entering={getEnteringAnimation()}
       layout={Layout.springify()}
       style={style}
     >
@@ -80,24 +80,26 @@ export const useTransformAnimation = () => {
     // Use this for transform animations only
     createTransformStyle: (opacity: any, translateY: any, scale: any) => ({
       opacity,
-      transform: [
-        { translateY },
-        { scale }
-      ],
+      transform: [{ translateY }, { scale }],
     }),
     // Use this for layout animations only
-    createLayoutAnimation: (delay: number = 0, direction: string = 'up') => {
+    createLayoutAnimation: (delay: number = 0, direction: string = "up") => {
       const getAnimation = () => {
         switch (direction) {
-          case 'up': return FadeInUp.delay(delay);
-          case 'down': return FadeInDown.delay(delay);
-          case 'left': return SlideInLeft.delay(delay);
-          case 'right': return SlideInRight.delay(delay);
-          default: return FadeInUp.delay(delay);
+          case "up":
+            return FadeInUp.delay(delay);
+          case "down":
+            return FadeInDown.delay(delay);
+          case "left":
+            return SlideInLeft.delay(delay);
+          case "right":
+            return SlideInRight.delay(delay);
+          default:
+            return FadeInUp.delay(delay);
         }
       };
       return getAnimation();
-    }
+    },
   };
 };
 

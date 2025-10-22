@@ -1,17 +1,29 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
   withTiming,
   withDelay,
-} from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, shadows, gradients } from '../utils/theme';
+} from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  colors,
+  spacing,
+  borderRadius,
+  shadows,
+  gradients,
+} from "../utils/theme";
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get("window");
 
 // Simple Animated Card Component
 interface SimpleAnimatedCardProps {
@@ -35,13 +47,10 @@ export const SimpleAnimatedCard: React.FC<SimpleAnimatedCardProps> = ({
   const translateY = useSharedValue(30);
 
   useEffect(() => {
-    opacity.value = withDelay(
-      delay,
-      withTiming(1, { duration: 300 })
-    );
+    opacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
     translateY.value = withDelay(
       delay,
-      withSpring(0, { damping: 15, stiffness: 100 })
+      withSpring(0, { damping: 15, stiffness: 100 }),
     );
   }, []);
 
@@ -69,10 +78,7 @@ export const SimpleAnimatedCard: React.FC<SimpleAnimatedCardProps> = ({
 
   if (onPress && !disabled) {
     return (
-      <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={0.8}
-      >
+      <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
         <CardContent />
       </TouchableOpacity>
     );
@@ -85,8 +91,8 @@ export const SimpleAnimatedCard: React.FC<SimpleAnimatedCardProps> = ({
 interface SimpleAnimatedButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline';
-  size?: 'small' | 'medium' | 'large';
+  variant?: "primary" | "secondary" | "outline";
+  size?: "small" | "medium" | "large";
   disabled?: boolean;
   loading?: boolean;
   icon?: keyof typeof Ionicons.glyphMap;
@@ -97,8 +103,8 @@ interface SimpleAnimatedButtonProps {
 export const SimpleAnimatedButton: React.FC<SimpleAnimatedButtonProps> = ({
   title,
   onPress,
-  variant = 'primary',
-  size = 'medium',
+  variant = "primary",
+  size = "medium",
   disabled = false,
   loading = false,
   icon,
@@ -121,13 +127,13 @@ export const SimpleAnimatedButton: React.FC<SimpleAnimatedButtonProps> = ({
 
   const getButtonStyle = () => {
     const baseStyle = [styles.button, styles[`button_${size}`]];
-    
+
     switch (variant) {
-      case 'primary':
+      case "primary":
         return [...baseStyle, styles.buttonPrimary];
-      case 'secondary':
+      case "secondary":
         return [...baseStyle, styles.buttonSecondary];
-      case 'outline':
+      case "outline":
         return [...baseStyle, styles.buttonOutline];
       default:
         return [...baseStyle, styles.buttonPrimary];
@@ -136,13 +142,13 @@ export const SimpleAnimatedButton: React.FC<SimpleAnimatedButtonProps> = ({
 
   const getTextStyle = () => {
     const baseStyle = [styles.buttonText, styles[`buttonText_${size}`]];
-    
+
     switch (variant) {
-      case 'primary':
+      case "primary":
         return [...baseStyle, styles.buttonTextPrimary];
-      case 'secondary':
+      case "secondary":
         return [...baseStyle, styles.buttonTextSecondary];
-      case 'outline':
+      case "outline":
         return [...baseStyle, styles.buttonTextOutline];
       default:
         return [...baseStyle, styles.buttonTextPrimary];
@@ -158,12 +164,12 @@ export const SimpleAnimatedButton: React.FC<SimpleAnimatedButtonProps> = ({
       ) : icon ? (
         <Ionicons
           name={icon}
-          size={size === 'small' ? 16 : size === 'large' ? 20 : 18}
-          color={variant === 'primary' ? colors.white : colors.primary}
+          size={size === "small" ? 16 : size === "large" ? 20 : 18}
+          color={variant === "primary" ? colors.white : colors.primary}
           style={styles.buttonIcon}
         />
       ) : null}
-      <Text style={getTextStyle()}>{loading ? 'Loading...' : title}</Text>
+      <Text style={getTextStyle()}>{loading ? "Loading..." : title}</Text>
     </View>
   );
 
@@ -202,7 +208,7 @@ interface SimpleSkeletonProps {
 }
 
 export const SimpleSkeleton: React.FC<SimpleSkeletonProps> = ({
-  width = '100%',
+  width = "100%",
   height = 20,
   borderRadius: borderRadiusValue = borderRadius.md,
   style,
@@ -246,7 +252,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     ...shadows.md,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   gradientCard: {
     borderRadius: borderRadius.lg,
@@ -256,8 +262,8 @@ const styles = StyleSheet.create({
   // Button Styles
   button: {
     borderRadius: borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     ...shadows.sm,
   },
   button_small: {
@@ -282,7 +288,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondary,
   },
   buttonOutline: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 2,
     borderColor: colors.primary,
   },
@@ -292,16 +298,16 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonIcon: {
     marginRight: spacing.sm,
   },
   buttonText: {
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
   buttonText_small: {
     fontSize: 14,

@@ -1,7 +1,17 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppData, Transaction, Category, Budget, BudgetAlert, AlertHistory, SmartSuggestion, AlertSettings } from '../types';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Logger from "./Logger";
+import {
+  AppData,
+  Transaction,
+  Category,
+  Budget,
+  BudgetAlert,
+  AlertHistory,
+  SmartSuggestion,
+  AlertSettings,
+} from "../types";
 
-const STORAGE_KEY = 'budget_manager_data';
+const STORAGE_KEY = "budget_manager_data";
 
 const defaultData: AppData = {
   transactions: [],
@@ -16,24 +26,50 @@ const defaultData: AppData = {
     enableEmailNotifications: false,
     quietHours: {
       enabled: true,
-      start: '22:00',
-      end: '08:00',
+      start: "22:00",
+      end: "08:00",
     },
-    alertFrequency: 'immediate',
+    alertFrequency: "immediate",
     smartSuggestions: true,
   },
   settings: {
-    currency: 'USD',
-    theme: 'dark',
+    currency: "USD",
+    theme: "dark",
     notifications: true,
   },
   isSetupComplete: false,
 };
 
 class StorageService {
+  private async withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+    return await Promise.race<Promise<T>>([
+      promise,
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("STORAGE_TIMEOUT")), ms),
+      ),
+    ]);
+  }
+
+  private async withRetry<T>(fn: () => Promise<T>, attempts = 2): Promise<T> {
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= attempts; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+        const backoffMs = Math.min(500 * Math.pow(2, attempt), 1500);
+        await new Promise((r) => setTimeout(r, backoffMs));
+      }
+    }
+    throw lastError;
+  }
+
   async getData(): Promise<AppData> {
     try {
-      const data = await AsyncStorage.getItem(STORAGE_KEY);
+      const data = await this.withTimeout(
+        this.withRetry(() => AsyncStorage.getItem(STORAGE_KEY)),
+        3000,
+      );
       if (data) {
         const parsedData = JSON.parse(data);
         // Migrate invalid icon names to valid ones
@@ -42,22 +78,22 @@ class StorageService {
       }
       return defaultData;
     } catch (error) {
-      console.error('Error loading data:', error);
+      Logger.error("Error loading data", { error: String(error) });
       return defaultData;
     }
   }
 
   private migrateIconNames(data: AppData): AppData {
     const iconMigrations: Record<string, string> = {
-      'bag-outline': 'bag',
-      'medical-outline': 'medical',
-      'shopping-cart': 'bag',
-      'tag': 'pricetag',
-      'remove-circle': 'remove-circle-outline',
-      'plus': 'add-circle',
-      'minus': 'remove-circle-outline',
-      'shopping-bag': 'bag',
-      'medical-bag': 'medical',
+      "bag-outline": "bag",
+      "medical-outline": "medical",
+      "shopping-cart": "bag",
+      tag: "pricetag",
+      "remove-circle": "remove-circle-outline",
+      plus: "add-circle",
+      minus: "remove-circle-outline",
+      "shopping-bag": "bag",
+      "medical-bag": "medical",
     };
 
     // Ensure all required arrays exist
@@ -76,15 +112,15 @@ class StorageService {
     if (!data.alertSettings) {
       data.alertSettings = defaultData.alertSettings;
     }
-    if (typeof data.isSetupComplete !== 'boolean') {
+    if (typeof data.isSetupComplete !== "boolean") {
       data.isSetupComplete = false;
     }
 
     // Migrate category icons
     if (data.categories) {
-      data.categories = data.categories.map(category => ({
+      data.categories = data.categories.map((category) => ({
         ...category,
-        icon: iconMigrations[category.icon] || category.icon
+        icon: iconMigrations[category.icon] || category.icon,
       }));
     }
 
@@ -93,13 +129,19 @@ class StorageService {
 
   async saveData(data: AppData): Promise<void> {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      const serialized = JSON.stringify(data);
+      await this.withTimeout(
+        this.withRetry(() => AsyncStorage.setItem(STORAGE_KEY, serialized)),
+        3000,
+      );
     } catch (error) {
-      console.error('Error saving data:', error);
+      Logger.error("Error saving data", { error: String(error) });
     }
   }
 
-  async addTransaction(transaction: Omit<Transaction, 'id' | 'createdAt'>): Promise<void> {
+  async addTransaction(
+    transaction: Omit<Transaction, "id" | "createdAt">,
+  ): Promise<void> {
     const data = await this.getData();
     const newTransaction: Transaction = {
       ...transaction,
@@ -110,9 +152,12 @@ class StorageService {
     await this.saveData(data);
   }
 
-  async updateTransaction(id: string, updates: Partial<Transaction>): Promise<void> {
+  async updateTransaction(
+    id: string,
+    updates: Partial<Transaction>,
+  ): Promise<void> {
     const data = await this.getData();
-    const index = data.transactions.findIndex(t => t.id === id);
+    const index = data.transactions.findIndex((t) => t.id === id);
     if (index !== -1) {
       data.transactions[index] = { ...data.transactions[index], ...updates };
       await this.saveData(data);
@@ -121,11 +166,11 @@ class StorageService {
 
   async deleteTransaction(id: string): Promise<void> {
     const data = await this.getData();
-    data.transactions = data.transactions.filter(t => t.id !== id);
+    data.transactions = data.transactions.filter((t) => t.id !== id);
     await this.saveData(data);
   }
 
-  async addCategory(category: Omit<Category, 'id'>): Promise<void> {
+  async addCategory(category: Omit<Category, "id">): Promise<void> {
     const data = await this.getData();
     const newCategory: Category = {
       ...category,
@@ -137,7 +182,7 @@ class StorageService {
 
   async updateCategory(id: string, updates: Partial<Category>): Promise<void> {
     const data = await this.getData();
-    const index = data.categories.findIndex(c => c.id === id);
+    const index = data.categories.findIndex((c) => c.id === id);
     if (index !== -1) {
       data.categories[index] = { ...data.categories[index], ...updates };
       await this.saveData(data);
@@ -146,14 +191,18 @@ class StorageService {
 
   async deleteCategory(id: string): Promise<void> {
     const data = await this.getData();
-    data.categories = data.categories.filter(c => c.id !== id);
+    data.categories = data.categories.filter((c) => c.id !== id);
     // Also remove transactions with this category
-    data.transactions = data.transactions.filter(t => t.category !== data.categories.find(c => c.id === id)?.name);
+    data.transactions = data.transactions.filter(
+      (t) => t.category !== data.categories.find((c) => c.id === id)?.name,
+    );
     await this.saveData(data);
   }
 
   // Budget management methods
-  async addBudget(budget: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>): Promise<void> {
+  async addBudget(
+    budget: Omit<Budget, "id" | "createdAt" | "updatedAt">,
+  ): Promise<void> {
     const data = await this.getData();
     const newBudget: Budget = {
       ...budget,
@@ -167,12 +216,12 @@ class StorageService {
 
   async updateBudget(id: string, updates: Partial<Budget>): Promise<void> {
     const data = await this.getData();
-    const index = data.budgets.findIndex(b => b.id === id);
+    const index = data.budgets.findIndex((b) => b.id === id);
     if (index !== -1) {
-      data.budgets[index] = { 
-        ...data.budgets[index], 
-        ...updates, 
-        updatedAt: new Date().toISOString() 
+      data.budgets[index] = {
+        ...data.budgets[index],
+        ...updates,
+        updatedAt: new Date().toISOString(),
       };
       await this.saveData(data);
     }
@@ -180,9 +229,9 @@ class StorageService {
 
   async deleteBudget(id: string): Promise<void> {
     const data = await this.getData();
-    data.budgets = data.budgets.filter(b => b.id !== id);
+    data.budgets = data.budgets.filter((b) => b.id !== id);
     // Also remove related budget alerts
-    data.budgetAlerts = data.budgetAlerts.filter(a => a.budgetId !== id);
+    data.budgetAlerts = data.budgetAlerts.filter((a) => a.budgetId !== id);
     await this.saveData(data);
   }
 
@@ -193,11 +242,13 @@ class StorageService {
 
   async getActiveBudgets(): Promise<Budget[]> {
     const data = await this.getData();
-    return (data.budgets || []).filter(b => b.isActive);
+    return (data.budgets || []).filter((b) => b.isActive);
   }
 
   // Budget alert methods
-  async addBudgetAlert(alert: Omit<BudgetAlert, 'id' | 'createdAt'>): Promise<void> {
+  async addBudgetAlert(
+    alert: Omit<BudgetAlert, "id" | "createdAt">,
+  ): Promise<void> {
     const data = await this.getData();
     const newAlert: BudgetAlert = {
       ...alert,
@@ -210,7 +261,7 @@ class StorageService {
 
   async markAlertAsRead(alertId: string): Promise<void> {
     const data = await this.getData();
-    const index = data.budgetAlerts.findIndex(a => a.id === alertId);
+    const index = data.budgetAlerts.findIndex((a) => a.id === alertId);
     if (index !== -1) {
       data.budgetAlerts[index].isRead = true;
       await this.saveData(data);
@@ -219,7 +270,7 @@ class StorageService {
 
   async getUnreadAlerts(): Promise<BudgetAlert[]> {
     const data = await this.getData();
-    return (data.budgetAlerts || []).filter(a => !a.isRead);
+    return (data.budgetAlerts || []).filter((a) => !a.isRead);
   }
 
   async clearAllAlerts(): Promise<void> {
@@ -229,7 +280,9 @@ class StorageService {
   }
 
   // Alert History methods
-  async addAlertHistory(history: Omit<AlertHistory, 'id' | 'createdAt'>): Promise<void> {
+  async addAlertHistory(
+    history: Omit<AlertHistory, "id" | "createdAt">,
+  ): Promise<void> {
     const data = await this.getData();
     const newHistory: AlertHistory = {
       ...history,
@@ -252,7 +305,9 @@ class StorageService {
   }
 
   // Smart Suggestions methods
-  async addSmartSuggestion(suggestion: Omit<SmartSuggestion, 'id' | 'createdAt'>): Promise<void> {
+  async addSmartSuggestion(
+    suggestion: Omit<SmartSuggestion, "id" | "createdAt">,
+  ): Promise<void> {
     const data = await this.getData();
     const newSuggestion: SmartSuggestion = {
       ...suggestion,
@@ -270,7 +325,7 @@ class StorageService {
 
   async deleteSmartSuggestion(id: string): Promise<void> {
     const data = await this.getData();
-    data.smartSuggestions = data.smartSuggestions.filter(s => s.id !== id);
+    data.smartSuggestions = data.smartSuggestions.filter((s) => s.id !== id);
     await this.saveData(data);
   }
 
@@ -292,12 +347,12 @@ class StorageService {
     return data.alertSettings || defaultData.alertSettings;
   }
 
-  async getSettings(): Promise<AppData['settings']> {
+  async getSettings(): Promise<AppData["settings"]> {
     const data = await this.getData();
     return data.settings;
   }
 
-  async updateSettings(settings: Partial<AppData['settings']>): Promise<void> {
+  async updateSettings(settings: Partial<AppData["settings"]>): Promise<void> {
     const data = await this.getData();
     data.settings = { ...data.settings, ...settings };
     await this.saveData(data);
@@ -309,9 +364,12 @@ class StorageService {
 
   async clearStorage(): Promise<void> {
     try {
-      await AsyncStorage.removeItem(STORAGE_KEY);
+      await this.withTimeout(
+        this.withRetry(() => AsyncStorage.removeItem(STORAGE_KEY)),
+        3000,
+      );
     } catch (error) {
-      console.error('Error clearing storage:', error);
+      Logger.error("Error clearing storage", { error: String(error) });
     }
   }
 
@@ -320,28 +378,38 @@ class StorageService {
    */
   async saveProfile(profile: any): Promise<void> {
     try {
-      await AsyncStorage.setItem('user_profile', JSON.stringify(profile));
+      const serialized = JSON.stringify(profile);
+      await this.withTimeout(
+        this.withRetry(() => AsyncStorage.setItem("user_profile", serialized)),
+        3000,
+      );
     } catch (error) {
-      console.error('Error saving profile:', error);
+      Logger.error("Error saving profile", { error: String(error) });
       throw error;
     }
   }
 
   async getProfile(): Promise<any | null> {
     try {
-      const profileData = await AsyncStorage.getItem('user_profile');
+      const profileData = await this.withTimeout(
+        this.withRetry(() => AsyncStorage.getItem("user_profile")),
+        3000,
+      );
       return profileData ? JSON.parse(profileData) : null;
     } catch (error) {
-      console.error('Error getting profile:', error);
+      Logger.error("Error getting profile", { error: String(error) });
       return null;
     }
   }
 
   async deleteProfile(): Promise<void> {
     try {
-      await AsyncStorage.removeItem('user_profile');
+      await this.withTimeout(
+        this.withRetry(() => AsyncStorage.removeItem("user_profile")),
+        3000,
+      );
     } catch (error) {
-      console.error('Error deleting profile:', error);
+      Logger.error("Error deleting profile", { error: String(error) });
       throw error;
     }
   }
@@ -351,19 +419,26 @@ class StorageService {
    */
   async setSetupComplete(complete: boolean): Promise<void> {
     try {
-      await AsyncStorage.setItem('setup_complete', JSON.stringify(complete));
+      const serialized = JSON.stringify(complete);
+      await this.withTimeout(
+        this.withRetry(() => AsyncStorage.setItem("setup_complete", serialized)),
+        3000,
+      );
     } catch (error) {
-      console.error('Error setting setup complete:', error);
+      Logger.error("Error setting setup complete", { error: String(error) });
       throw error;
     }
   }
 
   async getSetupComplete(): Promise<boolean> {
     try {
-      const setupComplete = await AsyncStorage.getItem('setup_complete');
+      const setupComplete = await this.withTimeout(
+        this.withRetry(() => AsyncStorage.getItem("setup_complete")),
+        3000,
+      );
       return setupComplete ? JSON.parse(setupComplete) : false;
     } catch (error) {
-      console.error('Error getting setup complete:', error);
+      Logger.error("Error getting setup complete", { error: String(error) });
       return false;
     }
   }

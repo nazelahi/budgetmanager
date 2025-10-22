@@ -5,6 +5,7 @@ A modern, feature-rich budget management application built with React Native and
 ## Features
 
 ### 📊 Dashboard
+
 - Real-time balance overview
 - Monthly income and expense tracking
 - Interactive charts showing 6-month trends
@@ -12,6 +13,7 @@ A modern, feature-rich budget management application built with React Native and
 - Recent transactions preview
 
 ### 💰 Transaction Management
+
 - Add income and expense transactions
 - Categorize transactions with custom categories
 - Filter transactions by type (income/expense)
@@ -19,12 +21,14 @@ A modern, feature-rich budget management application built with React Native and
 - Date-based transaction tracking
 
 ### 🏷️ Category Management
+
 - Pre-defined income and expense categories
 - Create custom categories with custom colors and icons
 - Edit and delete categories
 - Visual category organization
 
 ### ⚙️ Settings
+
 - Multiple currency support (USD, EUR, GBP, JPY, etc.)
 - Theme customization (Light/Dark mode)
 - Notification preferences
@@ -33,6 +37,7 @@ A modern, feature-rich budget management application built with React Native and
 - App statistics
 
 ### 📱 Modern UI/UX
+
 - Clean, compact design
 - Intuitive navigation with bottom tabs
 - Smooth animations and transitions
@@ -62,22 +67,26 @@ A modern, feature-rich budget management application built with React Native and
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd budgetmanager
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Start the development server:
+
 ```bash
 npm start
 ```
 
 4. Run on your preferred platform:
+
 ```bash
 # iOS
 npm run ios
@@ -127,20 +136,24 @@ The app uses AsyncStorage for local data persistence. All data is stored locally
 ## Key Features Implementation
 
 ### Real-time Data Updates
+
 - Context-based state management ensures UI updates immediately when data changes
 - Automatic data refresh across all screens
 
 ### Category System
+
 - Pre-defined categories for common income and expense types
 - Custom category creation with color and icon selection
 - Category-based transaction filtering
 
 ### Financial Analytics
+
 - Monthly trend analysis with interactive charts
 - Top spending categories with pie charts
 - Balance calculations and projections
 
 ### User Experience
+
 - Intuitive tab-based navigation
 - Pull-to-refresh functionality
 - Confirmation dialogs for destructive actions
@@ -149,17 +162,20 @@ The app uses AsyncStorage for local data persistence. All data is stored locally
 ## Customization
 
 ### Adding New Categories
+
 1. Go to the Categories tab
 2. Tap the "+" button
 3. Enter category name, select type, color, and icon
 4. Save the category
 
 ### Changing Currency
+
 1. Go to Settings
 2. Tap on Currency
 3. Select your preferred currency from the list
 
 ### Theme Customization
+
 1. Go to Settings
 2. Toggle between Light and Dark theme
 

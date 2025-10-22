@@ -1,10 +1,22 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, shadows, gradients } from '../utils/theme';
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  colors,
+  spacing,
+  borderRadius,
+  shadows,
+  gradients,
+} from "../utils/theme";
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get("window");
 
 // Basic Card Component
 interface BasicCardProps {
@@ -41,10 +53,7 @@ export const BasicCard: React.FC<BasicCardProps> = ({
 
   if (onPress && !disabled) {
     return (
-      <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={0.8}
-      >
+      <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
         <CardContent />
       </TouchableOpacity>
     );
@@ -57,8 +66,8 @@ export const BasicCard: React.FC<BasicCardProps> = ({
 interface BasicButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline';
-  size?: 'small' | 'medium' | 'large';
+  variant?: "primary" | "secondary" | "outline";
+  size?: "small" | "medium" | "large";
   disabled?: boolean;
   loading?: boolean;
   icon?: keyof typeof Ionicons.glyphMap;
@@ -69,8 +78,8 @@ interface BasicButtonProps {
 export const BasicButton: React.FC<BasicButtonProps> = ({
   title,
   onPress,
-  variant = 'primary',
-  size = 'medium',
+  variant = "primary",
+  size = "medium",
   disabled = false,
   loading = false,
   icon,
@@ -79,13 +88,13 @@ export const BasicButton: React.FC<BasicButtonProps> = ({
 }) => {
   const getButtonStyle = () => {
     const baseStyle = [styles.button, styles[`button_${size}`]];
-    
+
     switch (variant) {
-      case 'primary':
+      case "primary":
         return [...baseStyle, styles.buttonPrimary];
-      case 'secondary':
+      case "secondary":
         return [...baseStyle, styles.buttonSecondary];
-      case 'outline':
+      case "outline":
         return [...baseStyle, styles.buttonOutline];
       default:
         return [...baseStyle, styles.buttonPrimary];
@@ -94,13 +103,13 @@ export const BasicButton: React.FC<BasicButtonProps> = ({
 
   const getTextStyle = () => {
     const baseStyle = [styles.buttonText, styles[`buttonText_${size}`]];
-    
+
     switch (variant) {
-      case 'primary':
+      case "primary":
         return [...baseStyle, styles.buttonTextPrimary];
-      case 'secondary':
+      case "secondary":
         return [...baseStyle, styles.buttonTextSecondary];
-      case 'outline':
+      case "outline":
         return [...baseStyle, styles.buttonTextOutline];
       default:
         return [...baseStyle, styles.buttonTextPrimary];
@@ -116,12 +125,12 @@ export const BasicButton: React.FC<BasicButtonProps> = ({
       ) : icon ? (
         <Ionicons
           name={icon}
-          size={size === 'small' ? 16 : size === 'large' ? 20 : 18}
-          color={variant === 'primary' ? colors.white : colors.primary}
+          size={size === "small" ? 16 : size === "large" ? 20 : 18}
+          color={variant === "primary" ? colors.white : colors.primary}
           style={styles.buttonIcon}
         />
       ) : null}
-      <Text style={getTextStyle()}>{loading ? 'Loading...' : title}</Text>
+      <Text style={getTextStyle()}>{loading ? "Loading..." : title}</Text>
     </View>
   );
 
@@ -157,7 +166,7 @@ interface BasicSkeletonProps {
 }
 
 export const BasicSkeleton: React.FC<BasicSkeletonProps> = ({
-  width = '100%',
+  width = "100%",
   height = 20,
   borderRadius: borderRadiusValue = borderRadius.md,
   style,
@@ -183,7 +192,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     ...shadows.md,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   gradientCard: {
     borderRadius: borderRadius.lg,
@@ -193,8 +202,8 @@ const styles = StyleSheet.create({
   // Button Styles
   button: {
     borderRadius: borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     ...shadows.sm,
   },
   button_small: {
@@ -219,7 +228,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondary,
   },
   buttonOutline: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 2,
     borderColor: colors.primary,
   },
@@ -229,16 +238,16 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonIcon: {
     marginRight: spacing.sm,
   },
   buttonText: {
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
   buttonText_small: {
     fontSize: 14,

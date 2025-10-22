@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,13 +7,19 @@ import {
   Alert,
   Animated,
   Dimensions,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, typography, borderRadius, shadows } from '../utils/theme';
-import { useApp } from '../contexts/AppContext';
-import { BudgetAlert } from '../types';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  colors,
+  spacing,
+  typography,
+  borderRadius,
+  shadows,
+} from "../utils/theme";
+import { useApp } from "../contexts/AppContext";
+import { BudgetAlert } from "../types";
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get("window");
 
 interface BudgetAlertsProps {
   onDismiss?: () => void;
@@ -44,7 +50,7 @@ const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ onDismiss }) => {
       const unreadAlerts = await getUnreadAlerts();
       setAlerts(unreadAlerts);
     } catch (error) {
-      console.error('Error loading budget alerts:', error);
+      console.error("Error loading budget alerts:", error);
     }
   };
 
@@ -54,7 +60,7 @@ const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ onDismiss }) => {
     const currentAlert = alerts[currentAlertIndex];
     try {
       await markAlertAsRead(currentAlert.id);
-      
+
       if (currentAlertIndex < alerts.length - 1) {
         setCurrentAlertIndex(currentAlertIndex + 1);
       } else {
@@ -62,7 +68,7 @@ const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ onDismiss }) => {
         onDismiss?.();
       }
     } catch (error) {
-      console.error('Error dismissing alert:', error);
+      console.error("Error dismissing alert:", error);
     }
   };
 
@@ -74,7 +80,7 @@ const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ onDismiss }) => {
       setAlerts([]);
       onDismiss?.();
     } catch (error) {
-      console.error('Error dismissing all alerts:', error);
+      console.error("Error dismissing all alerts:", error);
     }
   };
 
@@ -87,25 +93,25 @@ const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ onDismiss }) => {
 
   const getAlertIcon = (type: string) => {
     switch (type) {
-      case 'warning':
-        return 'warning';
-      case 'exceeded':
-        return 'alert-circle';
-      case 'achieved':
-        return 'checkmark-circle';
+      case "warning":
+        return "warning";
+      case "exceeded":
+        return "alert-circle";
+      case "achieved":
+        return "checkmark-circle";
       default:
-        return 'information-circle';
+        return "information-circle";
     }
   };
 
   const getAlertColor = (type: string) => {
     switch (type) {
-      case 'warning':
-        return colors.warning || '#FFA500';
-      case 'exceeded':
+      case "warning":
+        return colors.warning || "#FFA500";
+      case "exceeded":
         return colors.error;
-      case 'achieved':
-        return colors.success || '#4CAF50';
+      case "achieved":
+        return colors.success || "#4CAF50";
       default:
         return colors.primary;
     }
@@ -113,14 +119,14 @@ const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ onDismiss }) => {
 
   const getAlertMessage = (alert: BudgetAlert) => {
     switch (alert.type) {
-      case 'warning':
+      case "warning":
         return `You've used ${alert.threshold}% of your budget. Consider slowing down your spending.`;
-      case 'exceeded':
+      case "exceeded":
         return `You've exceeded your budget by ${alert.threshold}%. Time to review your spending.`;
-      case 'achieved':
+      case "achieved":
         return `Great job! You've used ${alert.threshold}% of your budget and still have money left.`;
       default:
-        return 'Budget alert';
+        return "Budget alert";
     }
   };
 
@@ -130,40 +136,46 @@ const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ onDismiss }) => {
   });
 
   return (
-    <Animated.View 
+    <Animated.View
       style={[
         styles.container,
-        { transform: [{ translateX: slideTransform }] }
+        { transform: [{ translateX: slideTransform }] },
       ]}
     >
-      <View style={[
-        styles.alertCard,
-        { borderLeftColor: getAlertColor(currentAlert.type) }
-      ]}>
+      <View
+        style={[
+          styles.alertCard,
+          { borderLeftColor: getAlertColor(currentAlert.type) },
+        ]}
+      >
         <View style={styles.alertContent}>
           <View style={styles.alertLeft}>
-            <View style={[
-              styles.alertIcon,
-              { backgroundColor: getAlertColor(currentAlert.type) + '20' }
-            ]}>
-              <Ionicons 
-                name={getAlertIcon(currentAlert.type) as any} 
-                size={20} 
-                color={getAlertColor(currentAlert.type)} 
+            <View
+              style={[
+                styles.alertIcon,
+                { backgroundColor: getAlertColor(currentAlert.type) + "20" },
+              ]}
+            >
+              <Ionicons
+                name={getAlertIcon(currentAlert.type) as any}
+                size={20}
+                color={getAlertColor(currentAlert.type)}
               />
             </View>
             <View style={styles.alertText}>
               <Text style={styles.alertTitle}>
-                {currentAlert.type === 'warning' ? 'Budget Warning' :
-                 currentAlert.type === 'exceeded' ? 'Budget Exceeded' :
-                 'Budget Achievement'}
+                {currentAlert.type === "warning"
+                  ? "Budget Warning"
+                  : currentAlert.type === "exceeded"
+                    ? "Budget Exceeded"
+                    : "Budget Achievement"}
               </Text>
               <Text style={styles.alertMessage}>
                 {getAlertMessage(currentAlert)}
               </Text>
             </View>
           </View>
-          
+
           <View style={styles.alertActions}>
             {alerts.length > 1 && (
               <Text style={styles.alertCounter}>
@@ -178,7 +190,7 @@ const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ onDismiss }) => {
             </TouchableOpacity>
           </View>
         </View>
-        
+
         {alerts.length > 1 && (
           <View style={styles.alertFooter}>
             <TouchableOpacity
@@ -196,7 +208,7 @@ const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ onDismiss }) => {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
+    position: "absolute",
     top: 100,
     left: spacing.sm,
     right: spacing.sm,
@@ -209,21 +221,21 @@ const styles = StyleSheet.create({
     ...shadows.lg,
   },
   alertContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: spacing.md,
   },
   alertLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   alertIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: spacing.md,
   },
   alertText: {
@@ -232,7 +244,7 @@ const styles = StyleSheet.create({
   alertTitle: {
     ...typography.body,
     color: colors.textPrimary,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: spacing.xs,
   },
   alertMessage: {
@@ -241,7 +253,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   alertActions: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   alertCounter: {
     ...typography.caption,
@@ -253,14 +265,14 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     backgroundColor: colors.backgroundSecondary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   alertFooter: {
     borderTopWidth: 1,
     borderTopColor: colors.border,
     padding: spacing.sm,
-    alignItems: 'center',
+    alignItems: "center",
   },
   dismissAllButton: {
     paddingVertical: spacing.xs,
@@ -269,7 +281,7 @@ const styles = StyleSheet.create({
   dismissAllText: {
     ...typography.caption,
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

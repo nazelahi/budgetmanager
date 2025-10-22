@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, typography } from '../utils/theme';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { colors, spacing, typography } from "../utils/theme";
 
 interface EmptyStateProps {
   icon: string;
@@ -35,8 +35,8 @@ const EmptyState: React.FC<EmptyStateProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: spacing.xxl,
     paddingHorizontal: spacing.lg,
   },
@@ -45,19 +45,19 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginTop: spacing.md,
     marginBottom: spacing.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
   description: {
     ...typography.body,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.lg,
   },
   actionText: {
     ...typography.body,
     color: colors.primary,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
+    fontWeight: "600",
+    textDecorationLine: "underline",
   },
 });
 

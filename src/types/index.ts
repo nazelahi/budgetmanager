@@ -3,7 +3,7 @@ export interface Transaction {
   amount: number;
   description: string;
   category: string;
-  type: 'income' | 'expense';
+  type: "income" | "expense";
   date: string;
   createdAt: string;
 }
@@ -11,7 +11,7 @@ export interface Transaction {
 export interface Category {
   id: string;
   name: string;
-  type: 'income' | 'expense';
+  type: "income" | "expense";
   color: string;
   icon: string;
 }
@@ -21,7 +21,7 @@ export interface Budget {
   categoryId: string;
   categoryName: string;
   amount: number;
-  period: 'monthly' | 'yearly';
+  period: "monthly" | "yearly";
   startDate: string;
   endDate?: string;
   isActive: boolean;
@@ -32,7 +32,7 @@ export interface Budget {
 export interface BudgetAlert {
   id: string;
   budgetId: string;
-  type: 'warning' | 'exceeded' | 'achieved';
+  type: "warning" | "exceeded" | "achieved";
   threshold: number; // Percentage (e.g., 80 for 80% warning)
   isRead: boolean;
   createdAt: string;
@@ -51,7 +51,7 @@ export interface AlertSettings {
     start: string; // HH:MM format
     end: string; // HH:MM format
   };
-  alertFrequency: 'immediate' | 'daily' | 'weekly';
+  alertFrequency: "immediate" | "daily" | "weekly";
   smartSuggestions: boolean;
 }
 
@@ -59,7 +59,7 @@ export interface AlertHistory {
   id: string;
   budgetId: string;
   categoryName: string;
-  type: 'warning' | 'exceeded' | 'achieved';
+  type: "warning" | "exceeded" | "achieved";
   threshold: number;
   amount: number;
   budgetAmount: number;
@@ -72,10 +72,14 @@ export interface SmartSuggestion {
   id: string;
   budgetId: string;
   categoryName: string;
-  type: 'reduce_spending' | 'increase_budget' | 'reallocate_funds' | 'spending_pattern';
+  type:
+    | "reduce_spending"
+    | "increase_budget"
+    | "reallocate_funds"
+    | "spending_pattern";
   title: string;
   message: string;
-  priority: 'low' | 'medium' | 'high';
+  priority: "low" | "medium" | "high";
   actionable: boolean;
   createdAt: string;
 }
@@ -97,7 +101,6 @@ export interface BudgetStats {
   }>;
 }
 
-
 // Enhanced AppData interface
 export interface AppData {
   transactions: Transaction[];
@@ -109,7 +112,7 @@ export interface AppData {
   alertSettings: AlertSettings;
   settings: {
     currency: string;
-    theme: 'light' | 'dark';
+    theme: "light" | "dark";
     notifications: boolean;
   };
   isSetupComplete: boolean;

@@ -1,10 +1,23 @@
-import React, { useEffect, useRef } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
-import { Ionicons } from '@expo/vector-icons';
-import { View, StyleSheet, Platform, Text, StatusBar, Dimensions, TouchableOpacity, Alert, Share, Modal, Pressable, Image } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect, useRef } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  View,
+  StyleSheet,
+  Platform,
+  Text,
+  StatusBar,
+  Dimensions,
+  TouchableOpacity,
+  Share,
+  Modal,
+  Pressable,
+  Image,
+} from "react-native";
+import ToastService from "../services/ToastService";
+import { LinearGradient } from "expo-linear-gradient";
 // import { BlurView } from '@react-native-community/blur';
 import Animated, {
   useSharedValue,
@@ -16,36 +29,43 @@ import Animated, {
   interpolate,
   Extrapolate,
   FadeInDown,
-} from 'react-native-reanimated';
-import { colors, spacing, borderRadius, shadows, typography, gradients, animations } from '../utils/theme';
-import { useApp } from '../contexts/AppContext';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+} from "react-native-reanimated";
+import {
+  colors,
+  spacing,
+  borderRadius,
+  shadows,
+  typography,
+  gradients,
+  animations,
+} from "../utils/theme";
+import { useApp } from "../contexts/AppContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Import screens
-import DashboardScreen from '../screens/DashboardScreen';
-import DashboardScreenSimple from '../screens/DashboardScreenSimple';
-import TransactionsScreen from '../screens/TransactionsScreen';
-import EditTransactionScreen from '../screens/EditTransactionScreen';
-import EditCategoryScreen from '../screens/EditCategoryScreen';
-import CategoriesScreen from '../screens/CategoriesScreen';
-import BudgetScreen from '../screens/BudgetScreen';
-import SettingsScreen from '../screens/SettingsScreen';
-import ReportScreen from '../screens/ReportScreen';
-import AddTransactionModal from '../components/AddTransactionModal';
-import ProfileScreen from '../screens/ProfileScreen';
-import AccountScreen from '../screens/AccountScreen';
-import SetupScreen from '../screens/SetupScreen';
-import ModernBackground from '../components/ModernBackground';
+import DashboardScreen from "../screens/DashboardScreen";
+import TransactionsScreen from "../screens/TransactionsScreen";
+import EditTransactionScreen from "../screens/EditTransactionScreen";
+import EditCategoryScreen from "../screens/EditCategoryScreen";
+import CategoriesScreen from "../screens/CategoriesScreen";
+import BudgetScreen from "../screens/BudgetScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import ReportScreen from "../screens/ReportScreen";
+import AddTransactionModal from "../components/AddTransactionModal";
+import ProfileScreen from "../screens/ProfileScreen";
+import AccountScreen from "../screens/AccountScreen";
+import SetupScreen from "../screens/SetupScreen";
+import ModernBackground from "../components/ModernBackground";
 
 // Alert screens
-import AlertsDashboardScreen from '../screens/AlertsDashboardScreen';
-import AlertSettingsScreen from '../screens/AlertSettingsScreen';
-import AlertHistoryScreen from '../screens/AlertHistoryScreen';
-import SmartSuggestionsScreen from '../screens/SmartSuggestionsScreen';
+import AlertsDashboardScreen from "../screens/AlertsDashboardScreen";
+import AlertSettingsScreen from "../screens/AlertSettingsScreen";
+import AlertHistoryScreen from "../screens/AlertHistoryScreen";
+import SmartSuggestionsScreen from "../screens/SmartSuggestionsScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 // Empty screen component for the Add tab
 const EmptyScreen: React.FC = () => {
@@ -53,10 +73,17 @@ const EmptyScreen: React.FC = () => {
 };
 
 // Modern Animated Header Component
-const ModernHeader = ({ title, showBackButton = false, onBackPress, isDashboard = false, navigation, currentRoute }: { 
-  title: string; 
-  showBackButton?: boolean; 
-  onBackPress?: () => void; 
+const ModernHeader = ({
+  title,
+  showBackButton = false,
+  onBackPress,
+  isDashboard = false,
+  navigation,
+  currentRoute,
+}: {
+  title: string;
+  showBackButton?: boolean;
+  onBackPress?: () => void;
   isDashboard?: boolean;
   navigation?: any;
   currentRoute?: string;
@@ -77,187 +104,169 @@ const ModernHeader = ({ title, showBackButton = false, onBackPress, isDashboard 
   }));
 
   const generateQuickReport = () => {
-    if (!data?.transactions) return 'No data available';
-    
+    if (!data?.transactions) return "No data available";
+
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
-    
-    const monthlyTransactions = data.transactions.filter(transaction => {
+
+    const monthlyTransactions = data.transactions.filter((transaction) => {
       const transactionDate = new Date(transaction.date);
-      return transactionDate.getMonth() === currentMonth && 
-             transactionDate.getFullYear() === currentYear;
+      return (
+        transactionDate.getMonth() === currentMonth &&
+        transactionDate.getFullYear() === currentYear
+      );
     });
-    
+
     const income = monthlyTransactions
-      .filter(t => t.type === 'income')
+      .filter((t) => t.type === "income")
       .reduce((sum, t) => sum + t.amount, 0);
-    
+
     const expenses = monthlyTransactions
-      .filter(t => t.type === 'expense')
+      .filter((t) => t.type === "expense")
       .reduce((sum, t) => sum + t.amount, 0);
-    
+
     const balance = income - expenses;
-    
+
     const formatCurrency = (amount: number) => {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: data?.settings?.currency || 'USD',
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: data?.settings?.currency || "USD",
         minimumFractionDigits: 0,
       }).format(amount);
     };
-    
-    let report = `📊 BUDGET SUMMARY - ${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}\n\n`;
+
+    let report = `📊 BUDGET SUMMARY - ${currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}\n\n`;
     report += `💰 INCOME: ${formatCurrency(income)}\n`;
     report += `💸 EXPENSES: ${formatCurrency(expenses)}\n`;
     report += `💵 BALANCE: ${formatCurrency(balance)}\n`;
     report += `📝 TRANSACTIONS: ${monthlyTransactions.length}\n\n`;
     report += `Generated by Budget Manager App`;
-    
+
     return report;
   };
 
   const generateCSV = () => {
     if (!data?.transactions || data.transactions.length === 0) {
-      return 'Date,Description,Category,Type,Amount\nNo transactions found';
+      return "Date,Description,Category,Type,Amount\nNo transactions found";
     }
-    
+
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
-    
-    const monthlyTransactions = data.transactions.filter(transaction => {
+
+    const monthlyTransactions = data.transactions.filter((transaction) => {
       const transactionDate = new Date(transaction.date);
-      return transactionDate.getMonth() === currentMonth && 
-             transactionDate.getFullYear() === currentYear;
+      return (
+        transactionDate.getMonth() === currentMonth &&
+        transactionDate.getFullYear() === currentYear
+      );
     });
-    
+
     if (monthlyTransactions.length === 0) {
-      return 'Date,Description,Category,Type,Amount\nNo transactions for current month';
+      return "Date,Description,Category,Type,Amount\nNo transactions for current month";
     }
-    
-    let csv = 'Date,Description,Category,Type,Amount\n';
-    monthlyTransactions.forEach(transaction => {
+
+    let csv = "Date,Description,Category,Type,Amount\n";
+    monthlyTransactions.forEach((transaction) => {
       const date = new Date(transaction.date).toLocaleDateString();
-      const description = (transaction.description || '').replace(/"/g, '""').replace(/,/g, ';');
-      const category = (transaction.category || '').replace(/"/g, '""').replace(/,/g, ';');
-      const type = transaction.type || 'unknown';
+      const description = (transaction.description || "")
+        .replace(/"/g, '""')
+        .replace(/,/g, ";");
+      const category = (transaction.category || "")
+        .replace(/"/g, '""')
+        .replace(/,/g, ";");
+      const type = transaction.type || "unknown";
       const amount = transaction.amount || 0;
-      
+
       csv += `${date},"${description}","${category}","${type}",${amount}\n`;
     });
-    
+
     return csv;
   };
 
   const generatePDFContent = () => {
-    if (!data?.transactions) return '';
-    
+    if (!data?.transactions) return "";
+
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
-    
-    const monthlyTransactions = data.transactions.filter(transaction => {
+
+    const monthlyTransactions = data.transactions.filter((transaction) => {
       const transactionDate = new Date(transaction.date);
-      return transactionDate.getMonth() === currentMonth && 
-             transactionDate.getFullYear() === currentYear;
+      return (
+        transactionDate.getMonth() === currentMonth &&
+        transactionDate.getFullYear() === currentYear
+      );
     });
-    
+
     const income = monthlyTransactions
-      .filter(t => t.type === 'income')
+      .filter((t) => t.type === "income")
       .reduce((sum, t) => sum + t.amount, 0);
-    
+
     const expenses = monthlyTransactions
-      .filter(t => t.type === 'expense')
+      .filter((t) => t.type === "expense")
       .reduce((sum, t) => sum + t.amount, 0);
-    
+
     const balance = income - expenses;
-    
+
     const formatCurrency = (amount: number) => {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: data?.settings?.currency || 'USD',
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: data?.settings?.currency || "USD",
         minimumFractionDigits: 0,
       }).format(amount);
     };
-    
+
     let pdfContent = `BUDGET MANAGER REPORT\n`;
     pdfContent += `Generated: ${currentDate.toLocaleDateString()}\n`;
-    pdfContent += `Period: ${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}\n\n`;
-    
+    pdfContent += `Period: ${currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}\n\n`;
+
     pdfContent += `SUMMARY\n`;
     pdfContent += `-------\n`;
     pdfContent += `Total Income: ${formatCurrency(income)}\n`;
     pdfContent += `Total Expenses: ${formatCurrency(expenses)}\n`;
     pdfContent += `Net Balance: ${formatCurrency(balance)}\n`;
     pdfContent += `Total Transactions: ${monthlyTransactions.length}\n\n`;
-    
+
     pdfContent += `TRANSACTIONS\n`;
     pdfContent += `------------\n`;
     pdfContent += `Date\t\tDescription\t\tCategory\t\tType\t\tAmount\n`;
     pdfContent += `----\t\t-----------\t\t--------\t\t----\t\t------\n`;
-    
-    monthlyTransactions.forEach(transaction => {
+
+    monthlyTransactions.forEach((transaction) => {
       const date = new Date(transaction.date).toLocaleDateString();
       const description = transaction.description;
       const category = transaction.category;
       const type = transaction.type;
       const amount = formatCurrency(transaction.amount);
-      
+
       pdfContent += `${date}\t\t${description}\t\t${category}\t\t${type}\t\t${amount}\n`;
     });
-    
+
     return pdfContent;
   };
 
   const handleShare = async () => {
     try {
-      Alert.alert(
-        'Export Options',
-        'Choose export format:',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Text Report',
-            onPress: async () => {
-              const reportText = generateQuickReport();
-              await Share.share({
-                message: reportText,
-                title: 'Budget Summary',
-              });
-            }
-          },
-          {
-            text: 'CSV (Excel)',
-            onPress: async () => {
-              const csvContent = generateCSV();
-              await Share.share({
-                message: csvContent,
-                title: 'Budget Data - Excel Format',
-              });
-            }
-          },
-          {
-            text: 'PDF Format',
-            onPress: async () => {
-              const pdfContent = generatePDFContent();
-              await Share.share({
-                message: pdfContent,
-                title: 'Budget Report - PDF Format',
-              });
-            }
-          }
-        ]
-      );
+      const reportText = generateQuickReport();
+      await Share.share({ message: reportText, title: "Budget Summary" });
+      ToastService.success("Shared", "Report shared successfully");
     } catch (error) {
-      Alert.alert('Error', 'Failed to share report');
+      ToastService.error("Error", "Failed to share report");
     }
   };
 
   return (
     <Animated.View style={[styles.headerContainer, animatedHeaderStyle]}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <View style={[styles.headerGradient, { paddingTop: insets.top + spacing.xs }]}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent
+      />
+      <View
+        style={[styles.headerGradient, { paddingTop: insets.top + spacing.xs }]}
+      >
         <View style={styles.headerContent}>
           {/* Left Side - App Name (only for Dashboard) or Screen Title (for other screens) */}
           {isDashboard ? (
@@ -272,39 +281,39 @@ const ModernHeader = ({ title, showBackButton = false, onBackPress, isDashboard 
               <Text style={styles.headerTitle}>{title}</Text>
             </View>
           )}
-          
+
           {/* Center - Screen Title (only for Dashboard) */}
           {isDashboard && title && (
             <View style={styles.titleContainer}>
               <Text style={styles.headerTitle}>{title}</Text>
             </View>
           )}
-          
+
           {/* Right Side - Settings or Share */}
           <View style={styles.headerActions}>
-            {currentRoute === 'Report' ? (
+            {currentRoute === "Report" ? (
               <TouchableOpacity
                 onPress={handleShare}
                 style={styles.shareButton}
               >
                 <View style={styles.shareIcon}>
-                  <Ionicons 
-                    name="share-outline" 
-                    size={22} 
-                    color={colors.white} 
+                  <Ionicons
+                    name="share-outline"
+                    size={22}
+                    color={colors.white}
                   />
                 </View>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                onPress={() => navigation?.navigate('Settings')}
+                onPress={() => navigation?.navigate("Settings")}
                 style={styles.settingsButton}
               >
                 <View style={styles.settingsIcon}>
-                  <Ionicons 
-                    name="settings-outline" 
-                    size={22} 
-                    color={colors.white} 
+                  <Ionicons
+                    name="settings-outline"
+                    size={22}
+                    color={colors.white}
                   />
                 </View>
               </TouchableOpacity>
@@ -335,7 +344,12 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
 
   return (
     <Animated.View style={[styles.tabBarContainer, animatedTabBarStyle]}>
-      <View style={[styles.tabBarGradient, { paddingBottom: Math.max(insets.bottom - 8, 0) }]}>
+      <View
+        style={[
+          styles.tabBarGradient,
+          { paddingBottom: Math.max(insets.bottom - 8, 0) },
+        ]}
+      >
         <View style={styles.tabBarContent}>
           {state.routes.map((route: any, index: number) => {
             const { options } = descriptors[route.key];
@@ -343,7 +357,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
 
             const onPress = () => {
               const event = navigation.emit({
-                type: 'tabPress',
+                type: "tabPress",
                 target: route.key,
                 canPreventDefault: true,
               });
@@ -355,28 +369,28 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
 
             const onLongPress = () => {
               navigation.emit({
-                type: 'tabLongPress',
+                type: "tabLongPress",
                 target: route.key,
               });
             };
 
             let iconName: keyof typeof Ionicons.glyphMap;
-            if (route.name === 'Dashboard') {
-              iconName = isFocused ? 'wallet' : 'wallet-outline';
-            } else if (route.name === 'Transactions') {
-              iconName = isFocused ? 'receipt' : 'receipt-outline';
-            } else if (route.name === 'Categories') {
-              iconName = isFocused ? 'grid' : 'grid-outline';
-            } else if (route.name === 'Budget') {
-              iconName = isFocused ? 'card' : 'card-outline';
-            } else if (route.name === 'Add') {
-              iconName = isFocused ? 'add-circle' : 'add-circle-outline';
-            } else if (route.name === 'Report') {
-              iconName = isFocused ? 'bar-chart' : 'bar-chart-outline';
-            } else if (route.name === 'Account') {
-              iconName = isFocused ? 'person-circle' : 'person-circle-outline';
+            if (route.name === "Dashboard") {
+              iconName = isFocused ? "wallet" : "wallet-outline";
+            } else if (route.name === "Transactions") {
+              iconName = isFocused ? "receipt" : "receipt-outline";
+            } else if (route.name === "Categories") {
+              iconName = isFocused ? "grid" : "grid-outline";
+            } else if (route.name === "Budget") {
+              iconName = isFocused ? "card" : "card-outline";
+            } else if (route.name === "Add") {
+              iconName = isFocused ? "add-circle" : "add-circle-outline";
+            } else if (route.name === "Report") {
+              iconName = isFocused ? "bar-chart" : "bar-chart-outline";
+            } else if (route.name === "Account") {
+              iconName = isFocused ? "person-circle" : "person-circle-outline";
             } else {
-              iconName = 'help-outline';
+              iconName = "help-outline";
             }
 
             return (
@@ -388,7 +402,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
                 onPress={onPress}
                 onLongPress={onLongPress}
                 index={index}
-                profile={route.name === 'Profile' ? profile : null}
+                profile={route.name === "Profile" ? profile : null}
               />
             );
           })}
@@ -399,14 +413,14 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
 };
 
 // Animated Tab Item Component
-const AnimatedTabItem = ({ 
-  route, 
-  iconName, 
-  isFocused, 
-  onPress, 
-  onLongPress, 
+const AnimatedTabItem = ({
+  route,
+  iconName,
+  isFocused,
+  onPress,
+  onLongPress,
   index,
-  profile
+  profile,
 }: any) => {
   const scale = useSharedValue(1);
   const opacity = useSharedValue(0);
@@ -415,20 +429,17 @@ const AnimatedTabItem = ({
   useEffect(() => {
     opacity.value = withDelay(
       index * 100,
-      withTiming(1, { duration: animations.normal })
+      withTiming(1, { duration: animations.normal }),
     );
     translateY.value = withDelay(
       index * 100,
-      withSpring(0, { damping: 15, stiffness: 100 })
+      withSpring(0, { damping: 15, stiffness: 100 }),
     );
   }, []);
 
   const animatedItemStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
+    transform: [{ translateY: translateY.value }, { scale: scale.value }],
   }));
 
   const pressIn = () => {
@@ -449,21 +460,19 @@ const AnimatedTabItem = ({
         style={styles.tabItemTouchable}
         activeOpacity={0.8}
       >
-        {route.name === 'Add' ? (
+        {route.name === "Add" ? (
           <AnimatedAddButton iconName={iconName} isFocused={isFocused} />
         ) : (
-          <AnimatedTabIcon 
-            iconName={iconName} 
-            isFocused={isFocused} 
-            profile={route.name === 'Profile' ? profile : null}
+          <AnimatedTabIcon
+            iconName={iconName}
+            isFocused={isFocused}
+            profile={route.name === "Profile" ? profile : null}
           />
         )}
       </TouchableOpacity>
     </Animated.View>
   );
 };
-
-
 
 // Animated Add Button Component
 const AnimatedAddButton = ({ iconName, isFocused }: any) => {
@@ -481,22 +490,21 @@ const AnimatedAddButton = ({ iconName, isFocused }: any) => {
   }, [isFocused]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: scale.value },
-      { rotate: `${rotation.value}deg` },
-    ],
+    transform: [{ scale: scale.value }, { rotate: `${rotation.value}deg` }],
   }));
 
   return (
-    <Animated.View style={[
-      styles.addButtonContainer,
-      isFocused && styles.addButtonFocused,
-      animatedStyle
-    ]}>
-      <Ionicons 
-        name={iconName} 
-        size={isFocused ? 28 : 26} 
-        color={isFocused ? colors.white : colors.textSecondary} 
+    <Animated.View
+      style={[
+        styles.addButtonContainer,
+        isFocused && styles.addButtonFocused,
+        animatedStyle,
+      ]}
+    >
+      <Ionicons
+        name={iconName}
+        size={isFocused ? 28 : 26}
+        color={isFocused ? colors.white : colors.textSecondary}
       />
     </Animated.View>
   );
@@ -523,29 +531,31 @@ const AnimatedTabIcon = ({ iconName, isFocused, profile }: any) => {
   }));
 
   return (
-    <Animated.View style={[
-      styles.tabIconContainer,
-      isFocused && styles.tabIconFocused,
-      animatedStyle
-    ]}>
-      {profile && profile.avatarType === 'image' && profile.avatar ? (
-        <Image 
-          source={{ uri: profile.avatar }} 
+    <Animated.View
+      style={[
+        styles.tabIconContainer,
+        isFocused && styles.tabIconFocused,
+        animatedStyle,
+      ]}
+    >
+      {profile && profile.avatarType === "image" && profile.avatar ? (
+        <Image
+          source={{ uri: profile.avatar }}
           style={[
             styles.profileAvatar,
-            { 
-              width: isFocused ? 26 : 24, 
+            {
+              width: isFocused ? 26 : 24,
               height: isFocused ? 26 : 24,
               borderRadius: isFocused ? 13 : 12,
-            }
+            },
           ]}
           resizeMode="cover"
         />
       ) : (
-        <Ionicons 
-          name={iconName} 
-          size={isFocused ? 26 : 24} 
-          color={isFocused ? colors.primary : colors.textSecondary} 
+        <Ionicons
+          name={iconName}
+          size={isFocused ? 26 : 24}
+          color={isFocused ? colors.primary : colors.textSecondary}
         />
       )}
     </Animated.View>
@@ -562,15 +572,23 @@ const TabNavigator: React.FC<{
     <>
       <Tab.Navigator
         tabBar={(props) => <CustomTabBar {...props} />}
-          screenOptions={({ route }) => ({
-            header: ({ navigation, options }) => {
-              const title = options.title || (route.name === 'Dashboard' ? '' : route.name);
-              const isDashboard = route.name === 'Dashboard';
-              return <ModernHeader title={title} isDashboard={isDashboard} navigation={navigation} currentRoute={route.name} />;
-            },
+        screenOptions={({ route }) => ({
+          header: ({ navigation, options }) => {
+            const title =
+              options.title || (route.name === "Dashboard" ? "" : route.name);
+            const isDashboard = route.name === "Dashboard";
+            return (
+              <ModernHeader
+                title={title}
+                isDashboard={isDashboard}
+                navigation={navigation}
+                currentRoute={route.name}
+              />
+            );
+          },
           headerStyle: {
-            backgroundColor: 'transparent',
-            borderBottomColor: 'transparent',
+            backgroundColor: "transparent",
+            borderBottomColor: "transparent",
             borderBottomWidth: 0,
             elevation: 0,
             shadowOpacity: 0,
@@ -579,29 +597,29 @@ const TabNavigator: React.FC<{
           headerShadowVisible: false,
         })}
       >
-        <Tab.Screen 
-          name="Dashboard" 
+        <Tab.Screen
+          name="Dashboard"
           component={DashboardScreen}
           options={{ headerShown: false }}
         />
-        <Tab.Screen 
-          name="Transactions" 
+        <Tab.Screen
+          name="Transactions"
           component={TransactionsScreen}
           options={{ headerShown: false }}
         />
-        <Tab.Screen 
-          name="Categories" 
+        <Tab.Screen
+          name="Categories"
           component={CategoriesScreen}
-          options={{ 
+          options={{
             headerShown: false,
           }}
         />
-        <Tab.Screen 
-          name="Add" 
+        <Tab.Screen
+          name="Add"
           component={EmptyScreen}
-          options={{ 
-            title: 'Add Transaction',
-            tabBarLabel: 'Add',
+          options={{
+            title: "Add Transaction",
+            tabBarLabel: "Add",
           }}
           listeners={({ navigation }) => ({
             tabPress: (e) => {
@@ -610,17 +628,17 @@ const TabNavigator: React.FC<{
             },
           })}
         />
-        <Tab.Screen 
-          name="Budget" 
+        <Tab.Screen
+          name="Budget"
           component={BudgetScreen}
-          options={{ 
+          options={{
             headerShown: false,
           }}
         />
-        <Tab.Screen 
-          name="Report" 
+        <Tab.Screen
+          name="Report"
           component={ReportScreen}
-          options={{ 
+          options={{
             headerShown: false,
           }}
         />
@@ -632,15 +650,14 @@ const TabNavigator: React.FC<{
           }}
         />
       </Tab.Navigator>
-      
-      <AddTransactionModal 
-        visible={showAddModal} 
-        onClose={() => setShowAddModal(false)} 
+
+      <AddTransactionModal
+        visible={showAddModal}
+        onClose={() => setShowAddModal(false)}
       />
     </>
   );
 };
-
 
 // Main App Navigator with Stack
 const AppNavigator: React.FC = () => {
@@ -655,90 +672,88 @@ const AppNavigator: React.FC = () => {
           }}
           initialRouteName="MainTabs"
         >
-        <Stack.Screen 
-          name="MainTabs" 
-        >
-          {() => <TabNavigator onMorePress={() => {}} />}
-        </Stack.Screen>
-        <Stack.Screen 
-          name="EditTransaction" 
-          component={EditTransactionScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="EditCategory" 
-          component={EditCategoryScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="Report" 
-          component={ReportScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="Categories" 
-          component={CategoriesScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="Settings" 
-          component={SettingsScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="Profile" 
-          component={ProfileScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="Setup" 
-          component={SetupScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        
-        {/* Alert Screens */}
-        <Stack.Screen 
-          name="AlertsDashboard" 
-          component={AlertsDashboardScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="AlertSettings" 
-          component={AlertSettingsScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="AlertHistory" 
-          component={AlertHistoryScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="SmartSuggestions" 
-          component={SmartSuggestionsScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
+          <Stack.Screen name="MainTabs">
+            {() => <TabNavigator onMorePress={() => {}} />}
+          </Stack.Screen>
+          <Stack.Screen
+            name="EditTransaction"
+            component={EditTransactionScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="EditCategory"
+            component={EditCategoryScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="Report"
+            component={ReportScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="Categories"
+            component={CategoriesScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="Settings"
+            component={SettingsScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="Profile"
+            component={ProfileScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="Setup"
+            component={SetupScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+
+          {/* Alert Screens */}
+          <Stack.Screen
+            name="AlertsDashboard"
+            component={AlertsDashboardScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="AlertSettings"
+            component={AlertSettingsScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="AlertHistory"
+            component={AlertHistoryScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="SmartSuggestions"
+            component={SmartSuggestionsScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
         </Stack.Navigator>
       </ModernBackground>
     </NavigationContainer>
@@ -748,7 +763,7 @@ const AppNavigator: React.FC = () => {
 const styles = StyleSheet.create({
   // Header Styles
   headerContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -763,14 +778,14 @@ const styles = StyleSheet.create({
     ...shadows.lg,
   },
   headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     minHeight: 44,
   },
   dashboardHeaderContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   profileImage: {
@@ -778,37 +793,37 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: spacing.sm,
   },
   userName: {
     fontSize: 16,
     color: colors.white,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginLeft: spacing.sm,
   },
   screenTitleContainer: {
     flex: 1,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    alignItems: "flex-start",
+    justifyContent: "center",
   },
   titleContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   headerTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.white,
     letterSpacing: 0.3,
-    textAlign: 'center',
+    textAlign: "center",
   },
   headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
     flex: 1,
   },
   settingsButton: {
@@ -818,11 +833,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: "rgba(255, 255, 255, 0.1)",
   },
   shareButton: {
     padding: spacing.xs,
@@ -831,16 +846,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: "rgba(255, 255, 255, 0.1)",
   },
-  
+
   // Tab Bar Styles
   tabBarContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
@@ -851,25 +866,25 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: borderRadius.lg,
     borderTopRightRadius: borderRadius.lg,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    borderTopColor: "rgba(255, 255, 255, 0.1)",
     backgroundColor: colors.surface,
   },
   tabBarContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
     paddingHorizontal: spacing.sm,
     minHeight: 50,
   },
   tabItem: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 2,
   },
   tabItemTouchable: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 2,
     paddingHorizontal: spacing.xs,
     borderRadius: borderRadius.md,
@@ -878,26 +893,26 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "transparent",
   },
   tabIconFocused: {
-    backgroundColor: colors.primary + '20',
+    backgroundColor: colors.primary + "20",
     borderWidth: 1,
-    borderColor: colors.primary + '40',
+    borderColor: colors.primary + "40",
   },
   profileAvatar: {
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.primary + '40',
+    borderColor: colors.primary + "40",
   },
   addButtonContainer: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: colors.surface,
     borderWidth: 2,
     borderColor: colors.border,
@@ -908,7 +923,6 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     ...shadows.lg,
   },
-
 });
 
 export default AppNavigator;
